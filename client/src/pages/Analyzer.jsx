@@ -45,7 +45,9 @@ export default function Analyzer() {
       <div className="blob blob-3"></div>
 
       <nav className="nav">
-        <div className="nav-logo" onClick={() => navigate('/')}>ResuMatch</div>
+        <div className="nav-logo" onClick={() => navigate('/')}>
+          ResuMatch<span className="logo-dot">.</span>
+        </div>
         <div className="nav-user">
           <img
             src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email}&background=7c3aed&color=fff`}

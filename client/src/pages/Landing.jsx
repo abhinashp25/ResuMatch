@@ -1,7 +1,8 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Footer from '../components/Footer';
 
 // ─── BLUR TEXT ───
 const BlurText = ({ text, style }) => {
@@ -39,6 +40,7 @@ const fu = { initial: { filter: 'blur(10px)', opacity: 0, y: 20 }, animate: { fi
 export default function Landing() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [hovered, setHovered] = useState(null);
 
   return (
     <div style={{ background: '#000', color: '#fff', overflowX: 'hidden' }}>
@@ -72,18 +74,69 @@ export default function Landing() {
       
       {/* NAV - Moved outside sections so it isn't clipped by scroll/stacking contexts */}
       <nav style={{ position: 'fixed', top: 16, left: 0, right: 0, padding: '0 64px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 9999 }}>
-        <div className="lq" onClick={() => navigate('/')} style={{ width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 22, color: '#fff' }}>r</span>
+        <div style={{ minWidth: 140 }}>
+          <div className="nav-logo" onClick={() => navigate('/')}>
+            ResuMatch<span className="logo-dot">.</span>
+          </div>
         </div>
 
-        <div className="lq nav-pill nav-center" style={{ borderRadius: 9999, padding: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-          {['Home', 'How It Works', 'Features', 'Match Score', 'Pricing'].map(l => <span key={l}>{l}</span>)}
-          <button onClick={() => navigate(user ? '/app' : '/auth')} style={{ background: '#fff', color: '#000', border: 'none', borderRadius: 9999, padding: '8px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Barlow',sans-serif", whiteSpace: 'nowrap' }}>
+        <div 
+          className="lq nav-center" 
+          style={{ borderRadius: 9999, padding: 6, display: 'flex', alignItems: 'center', gap: 4, position: 'relative' }}
+          onMouseLeave={() => setHovered(null)}
+        >
+          {['Home', 'How It Works', 'Features', 'Match Score', 'Pricing'].map((l, index) => (
+            <span
+              key={l}
+              onMouseEnter={() => setHovered(index)}
+              style={{
+                position: 'relative',
+                padding: '8px 16px',
+                fontSize: 14,
+                fontWeight: 500,
+                color: hovered === index ? '#fff' : 'rgba(255,255,255,0.7)',
+                cursor: 'pointer',
+                fontFamily: "'Barlow', sans-serif",
+                zIndex: 2,
+                transition: 'color 0.2s ease',
+              }}
+            >
+              {l}
+              {hovered === index && (
+                <motion.div
+                  layoutId="nav-hover-pill"
+                  className="hover-pill-bg"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: 9999,
+                    zIndex: -1,
+                  }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
+            </span>
+          ))}
+          <button onClick={() => navigate(user ? '/app' : '/auth')} style={{ background: '#fff', color: '#000', border: 'none', borderRadius: 9999, padding: '8px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Barlow',sans-serif", whiteSpace: 'nowrap', position: 'relative', zIndex: 2 }}>
             Analyze Resume <Arrow size={16} />
           </button>
         </div>
 
-        <div style={{ width: 48, height: 48 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 140, justifyContent: 'flex-end' }}>
+          {user ? (
+            <div onClick={() => navigate('/app')} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <img
+                src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=7c3aed&color=fff`}
+                style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)' }}
+                alt="avatar"
+              />
+            </div>
+          ) : (
+            <span onClick={() => navigate('/auth')} style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.8)', cursor: 'pointer', fontFamily: "'Barlow', sans-serif" }}>
+              Sign In
+            </span>
+          )}
+        </div>
       </nav>
 
       {/* ══════════════ HERO ══════════════ */}
@@ -238,6 +291,100 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════ TESTIMONIALS ══════════════ */}
+      <section className="testimonials-section">
+        <div style={{ textAlign: 'center', padding: '0 24px', zIndex: 10 }}>
+          <div className="lq" style={{ display: 'inline-flex', borderRadius: 9999, padding: '6px 16px', color: '#7c3aed', background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)', fontSize: 13, fontWeight: 600, fontFamily: "'Barlow', sans-serif", letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 16 }}>
+            Testimonials
+          </div>
+          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#fff', fontFamily: "'Barlow', sans-serif", fontWeight: 700, letterSpacing: '-1.5px', marginBottom: 16 }}>
+            Don't just take our words
+          </h2>
+          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', maxWidth: 600, margin: '0 auto', lineHeight: 1.6, fontFamily: "'Barlow', sans-serif", fontWeight: 300 }}>
+            Hear what our users say about us. We're always looking for ways to improve. If you have a positive experience with us, leave a review.
+          </p>
+        </div>
+
+        <div className="marquee-container">
+          {/* Row 1: Left moving */}
+          <div className="marquee-row left">
+            {[
+              { name: 'Avery Johnson', handle: 'averywrites', text: 'ResuMatch made undercutting all of my competitors an absolute breeze. Got a 90% score and landed my interview at Google!' },
+              { name: 'Briar Martin', handle: 'neilstellar', text: 'The multi-model fallback feature saved me. My resume was not parsing elsewhere, but here it worked instantly.' },
+              { name: 'Jordan Lee', handle: 'jordantalks', text: 'Actionable suggestions are gold. Adding the exact keywords missing from my profile bumped my call-backs by 3x.' },
+              { name: 'Morgan Davis', handle: 'morgancodes', text: 'Super clean UI and blazing fast analysis. The liquid glass aesthetics make it a joy to use.' },
+            ].concat([
+              { name: 'Avery Johnson', handle: 'averywrites', text: 'ResuMatch made undercutting all of my competitors an absolute breeze. Got a 90% score and landed my interview at Google!' },
+              { name: 'Briar Martin', handle: 'neilstellar', text: 'The multi-model fallback feature saved me. My resume was not parsing elsewhere, but here it worked instantly.' },
+              { name: 'Jordan Lee', handle: 'jordantalks', text: 'Actionable suggestions are gold. Adding the exact keywords missing from my profile bumped my call-backs by 3x.' },
+              { name: 'Morgan Davis', handle: 'morgancodes', text: 'Super clean UI and blazing fast analysis. The liquid glass aesthetics make it a joy to use.' },
+            ]).map((t, idx) => (
+              <div key={idx} className="lq testimonial-card">
+                <div className="testimonial-user">
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=7c3aed&color=fff`}
+                    className="testimonial-avatar"
+                    alt={t.name}
+                  />
+                  <div className="testimonial-user-info">
+                    <span className="testimonial-name">
+                      {t.name}
+                      <span className="testimonial-verified">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                      </span>
+                    </span>
+                    <span className="testimonial-handle">@{t.handle}</span>
+                  </div>
+                </div>
+                <p className="testimonial-text">"{t.text}"</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Row 2: Right moving */}
+          <div className="marquee-row right">
+            {[
+              { name: 'Taylor Smith', handle: 'taylordesign', text: 'I love the detailed keyword gap analysis. It felt like having a personal resume coach beside me.' },
+              { name: 'Alex Rivera', handle: 'alexdev', text: 'Saved my history and allowed me to track matching improvements over time. Simply brilliant.' },
+              { name: 'Sam Wilson', handle: 'sambuilds', text: 'From a 45% match score to an 85% match score. Got the offer last week! Highly recommend ResuMatch.' },
+              { name: 'Casey Jones', handle: 'caseyops', text: 'The ATS compatibility checking is top tier. Understood exactly what keywords were missing.' },
+            ].concat([
+              { name: 'Taylor Smith', handle: 'taylordesign', text: 'I love the detailed keyword gap analysis. It felt like having a personal resume coach beside me.' },
+              { name: 'Alex Rivera', handle: 'alexdev', text: 'Saved my history and allowed me to track matching improvements over time. Simply brilliant.' },
+              { name: 'Sam Wilson', handle: 'sambuilds', text: 'From a 45% match score to an 85% match score. Got the offer last week! Highly recommend ResuMatch.' },
+              { name: 'Casey Jones', handle: 'caseyops', text: 'The ATS compatibility checking is top tier. Understood exactly what keywords were missing.' },
+            ]).map((t, idx) => (
+              <div key={idx} className="lq testimonial-card">
+                <div className="testimonial-user">
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=2563eb&color=fff`}
+                    className="testimonial-avatar"
+                    alt={t.name}
+                  />
+                  <div className="testimonial-user-info">
+                    <span className="testimonial-name">
+                      {t.name}
+                      <span className="testimonial-verified">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                      </span>
+                    </span>
+                    <span className="testimonial-handle">@{t.handle}</span>
+                  </div>
+                </div>
+                <p className="testimonial-text">"{t.text}"</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }

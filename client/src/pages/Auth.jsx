@@ -47,17 +47,42 @@ export default function Auth() {
 
   return (
     <div className="auth-page">
-      <div className="blob blob-1"></div>
-      <div className="blob blob-2"></div>
+      {/* Background images with cross-fade transition */}
+      <div 
+        className="auth-bg-layer" 
+        style={{ 
+          backgroundImage: 'url(/Login.png)', 
+          opacity: isLogin ? 0.45 : 0 
+        }} 
+      />
+      <div 
+        className="auth-bg-layer" 
+        style={{ 
+          backgroundImage: 'url(/Sign_up.png)', 
+          opacity: !isLogin ? 0.45 : 0 
+        }} 
+      />
+      
+      {/* Dark overlay to balance readability */}
+      <div 
+        style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          background: 'radial-gradient(circle, rgba(2,2,5,0.3) 0%, rgba(2,2,5,0.85) 100%)', 
+          zIndex: 1 
+        }} 
+      />
 
-      <div className="auth-card glass-card">
-        <div className="auth-logo" onClick={() => navigate('/')}>ResuMatch</div>
+      <div className="auth-card liquid-glass">
+        <div className="auth-logo" onClick={() => navigate('/')}>
+          ResuMatch<span className="logo-dot">.</span>
+        </div>
         <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
         <p className="auth-sub">
           {isLogin ? 'Sign in to analyze your resume' : 'Start for free — no credit card needed'}
         </p>
 
-        <div className="auth-toggle">
+        <div className="auth-toggle" style={{ position: 'relative', zIndex: 10 }}>
           <button className={isLogin ? 'active' : ''} onClick={() => setIsLogin(true)}>Sign In</button>
           <button className={!isLogin ? 'active' : ''} onClick={() => setIsLogin(false)}>Sign Up</button>
         </div>
@@ -68,6 +93,7 @@ export default function Auth() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           className="auth-input"
+          style={{ position: 'relative', zIndex: 10 }}
         />
         <input
           type="password"
@@ -75,18 +101,19 @@ export default function Auth() {
           value={password}
           onChange={e => setPassword(e.target.value)}
           className="auth-input"
+          style={{ position: 'relative', zIndex: 10 }}
           onKeyDown={e => e.key === 'Enter' && handleEmailAuth()}
         />
 
-        {error && <p className="error">{error}</p>}
+        {error && <p className="error" style={{ position: 'relative', zIndex: 10 }}>{error}</p>}
 
-        <button className="btn-primary w-full" onClick={handleEmailAuth} disabled={loading}>
+        <button className="btn-primary w-full" onClick={handleEmailAuth} disabled={loading} style={{ position: 'relative', zIndex: 10 }}>
           {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
         </button>
 
-        <div className="divider"><span>or</span></div>
+        <div className="divider" style={{ position: 'relative', zIndex: 10 }}><span>or</span></div>
 
-        <button className="btn-google" onClick={handleGoogle} disabled={loading}>
+        <button className="btn-google" onClick={handleGoogle} disabled={loading} style={{ position: 'relative', zIndex: 10 }}>
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" />
           Continue with Google
         </button>
