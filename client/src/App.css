@@ -93,7 +93,7 @@ body {
 .user-email { font-size: 0.875rem; color: var(--text-muted); }
 
 .btn-primary {
-  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  background: #7c3aed;
   color: white;
   border: none;
   border-radius: 12px;
@@ -105,7 +105,7 @@ body {
   position: relative;
   z-index: 1;
 }
-.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(124,58,237,0.4); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); background: #6d28d9; }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-large { padding: 16px 36px; font-size: 1rem; border-radius: 14px; }
 
@@ -239,6 +239,7 @@ body {
   text-align: center;
   position: relative;
   z-index: 10;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .auth-logo {
@@ -409,7 +410,7 @@ body {
 .testimonials-section {
   position: relative;
   padding: 100px 0 60px;
-  background: #000;
+  background: #f8fafc;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -425,8 +426,8 @@ body {
   width: 100%;
   margin-top: 50px;
   position: relative;
-  mask-image: linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(to right, transparent, #f8fafc 12%, #f8fafc 88%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #f8fafc 12%, #f8fafc 88%, transparent);
 }
 
 .marquee-row {
@@ -465,12 +466,16 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .testimonial-card:hover {
   transform: translateY(-4px);
   border-color: rgba(124, 58, 237, 0.3);
+  box-shadow: 0 12px 30px rgba(124, 58, 237, 0.08);
 }
 
 .testimonial-user {
@@ -485,7 +490,7 @@ body {
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(124, 58, 237, 0.2);
 }
 
 .testimonial-user-info {
@@ -498,7 +503,7 @@ body {
   font-family: 'Barlow', sans-serif;
   font-weight: 600;
   font-size: 14px;
-  color: #fff;
+  color: #0f172a;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -512,15 +517,15 @@ body {
 .testimonial-handle {
   font-family: 'Barlow', sans-serif;
   font-size: 12px;
-  color: var(--text-muted);
+  color: #64748b;
 }
 
 .testimonial-text {
   font-family: 'Barlow', sans-serif;
   font-size: 14px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 300;
+  color: #334155;
+  font-weight: 400;
   text-align: left;
 }
 
@@ -528,8 +533,8 @@ body {
 .footer-container {
   position: relative;
   padding: 80px 64px 40px;
-  background: #020205;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: #f1f5f9;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
   overflow: hidden;
   z-index: 10;
 }
@@ -541,7 +546,7 @@ body {
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(37, 99, 235, 0.08) 50%, transparent 80%);
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, rgba(37, 99, 235, 0.04) 50%, transparent 80%);
   filter: blur(60px);
   pointer-events: none;
   z-index: 1;
@@ -567,7 +572,7 @@ body {
   font-family: 'Barlow', sans-serif;
   font-size: 1.8rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #0f172a;
   letter-spacing: -0.5px;
   cursor: pointer;
   display: inline-flex;
@@ -579,7 +584,7 @@ body {
   font-family: 'Barlow', sans-serif;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--text-muted);
+  color: #475569;
   font-weight: 300;
 }
 
@@ -593,7 +598,7 @@ body {
   font-family: 'Barlow', sans-serif;
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: #0f172a;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 20px;
@@ -609,14 +614,14 @@ body {
 .footer-links-col ul li {
   font-family: 'Barlow', sans-serif;
   font-size: 14px;
-  color: var(--text-muted);
+  color: #475569;
   cursor: pointer;
   transition: color 0.2s ease, transform 0.2s ease;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .footer-links-col ul li:hover {
-  color: #fff;
+  color: #7c3aed;
   transform: translateX(2px);
 }
 
@@ -627,7 +632,7 @@ body {
 }
 
 .hiring-tag {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.1);
   color: #10b981;
   font-size: 10px;
   padding: 2px 8px;
@@ -643,7 +648,7 @@ body {
   max-width: 1200px;
   margin: 60px auto 0;
   padding-top: 32px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
   position: relative;
   z-index: 2;
 }
@@ -651,7 +656,7 @@ body {
 .footer-bottom .copyright {
   font-family: 'Barlow', sans-serif;
   font-size: 13px;
-  color: var(--text-muted);
+  color: #64748b;
   font-weight: 300;
 }
 
@@ -661,7 +666,7 @@ body {
 }
 
 .social-icons a {
-  color: var(--text-muted);
+  color: #475569;
   transition: color 0.2s ease, transform 0.2s ease;
   display: flex;
   align-items: center;
@@ -669,8 +674,40 @@ body {
 }
 
 .social-icons a:hover {
-  color: #fff;
+  color: #7c3aed;
   transform: translateY(-2px);
+}
+
+/* Glass Sign In Button */
+.btn-signin-glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  font-family: 'Barlow', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+  text-decoration: none;
+}
+
+.btn-signin-glass:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-signin-glass:active {
+  transform: translateY(0);
 }
 
 @media(max-width: 768px) {
@@ -691,5 +728,15 @@ body {
   }
   .footer-container {
     padding: 60px 24px 30px;
+  }
+}
+
+/* Shift Auth Card Left/Right depending on Sign In / Sign Up state on Desktop */
+@media (min-width: 1024px) {
+  .auth-page.auth-signin-state .auth-card {
+    transform: translateX(22vw);
+  }
+  .auth-page.auth-signup-state .auth-card {
+    transform: translateX(-22vw);
   }
 }

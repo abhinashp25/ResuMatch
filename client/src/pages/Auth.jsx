@@ -46,7 +46,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="auth-page">
+    <div className={`auth-page ${isLogin ? 'auth-signin-state' : 'auth-signup-state'}`}>
       {/* Background images with cross-fade transition */}
       <div 
         className="auth-bg-layer" 
