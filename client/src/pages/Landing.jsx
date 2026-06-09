@@ -42,6 +42,9 @@ export default function Landing() {
   const { user } = useAuth();
   const [hovered, setHovered] = useState(null);
   const [scrollY, setScrollY] = useState(0);
+  const [activeSection, setActiveSection] = useState('Home');
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimeout = useRef(null);
 
   // Section Refs for smooth scrolling
   const homeRef = useRef(null);
@@ -51,16 +54,23 @@ export default function Landing() {
   const pricingRef = useRef(null);
 
   const handleNavClick = (label) => {
+    setActiveSection(label);
+    isProgrammaticScroll.current = true;
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    scrollTimeout.current = setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 1000);
+
     if (label === 'Home') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (label === 'How It Works') {
-      howItWorksRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } else if (label === 'Features') {
-      featuresRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } else if (label === 'Testimonials') {
-      testimonialsRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } else if (label === 'Pricing') {
-      pricingRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      const refMap = {
+        'How It Works': howItWorksRef,
+        'Features': featuresRef,
+        'Testimonials': testimonialsRef,
+        'Pricing': pricingRef,
+      };
+      refMap[label]?.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -68,6 +78,44 @@ export default function Landing() {
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-50% 0px -50% 0px',
+      threshold: 0,
+    };
+
+    const handleIntersection = (entries) => {
+      if (isProgrammaticScroll.current) return;
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          if (id === 'home') setActiveSection('Home');
+          else if (id === 'how-it-works') setActiveSection('How It Works');
+          else if (id === 'features') setActiveSection('Features');
+          else if (id === 'testimonials') setActiveSection('Testimonials');
+          else if (id === 'pricing') setActiveSection('Pricing');
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, observerOptions);
+
+    const targets = [
+      homeRef.current,
+      howItWorksRef.current,
+      featuresRef.current,
+      testimonialsRef.current,
+      pricingRef.current,
+    ].filter(Boolean);
+
+    targets.forEach((target) => observer.observe(target));
+
+    return () => {
+      targets.forEach((target) => observer.unobserve(target));
+    };
   }, []);
 
   const onLight = scrollY > window.innerHeight * 1.85;
@@ -248,33 +296,36 @@ export default function Landing() {
           }}
           onMouseLeave={() => setHovered(null)}
         >
-          {['Home', 'How It Works', 'Features', 'Testimonials', 'Pricing'].map((l, index) => (
-            <span
-              key={l}
-              onMouseEnter={() => setHovered(index)}
-              onClick={() => handleNavClick(l)}
-              style={{
-                position: 'relative', padding: '8px 16px', fontSize: 14, fontWeight: 500,
-                color: onLight
-                  ? (hovered === index ? '#0f172a' : '#64748b')
-                  : (hovered === index ? '#fff' : 'rgba(255,255,255,0.75)'),
-                cursor: 'pointer', fontFamily: "'Barlow', sans-serif", zIndex: 2,
-                transition: 'color 0.2s ease',
-              }}
-            >
-              {l}
-              {hovered === index && (
-                <motion.div
-                  layoutId="nav-hover-pill"
-                  style={{
-                    position: 'absolute', inset: 0, borderRadius: 9999, zIndex: -1,
-                    background: onLight ? 'rgba(15,23,42,0.06)' : 'rgba(255,255,255,0.1)',
-                  }}
-                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                />
-              )}
-            </span>
-          ))}
+          {['Home', 'How It Works', 'Features', 'Testimonials', 'Pricing'].map((l, index) => {
+            const isActive = hovered !== null ? hovered === index : activeSection === l;
+            return (
+              <span
+                key={l}
+                onMouseEnter={() => setHovered(index)}
+                onClick={() => handleNavClick(l)}
+                style={{
+                  position: 'relative', padding: '8px 16px', fontSize: 14, fontWeight: 500,
+                  color: onLight
+                    ? (isActive ? '#0f172a' : '#64748b')
+                    : (isActive ? '#fff' : 'rgba(255,255,255,0.75)'),
+                  cursor: 'pointer', fontFamily: "'Barlow', sans-serif", zIndex: 2,
+                  transition: 'color 0.2s ease',
+                }}
+              >
+                {l}
+                {isActive && (
+                  <motion.div
+                    layoutId="nav-hover-pill"
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: 9999, zIndex: -1,
+                      background: onLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.12)',
+                    }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </span>
+            );
+          })}
           <button
             onClick={() => navigate(user ? '/app' : '/auth')}
             style={{
@@ -421,9 +472,11 @@ export default function Landing() {
             {cards.map((card, i) => (
               <motion.div 
                 variants={itemVariants}
+                whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.32)', boxShadow: '0 14px 40px -4px rgba(0,0,0,0.36)' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
                 key={i} 
                 className="lq" 
-                style={{ borderRadius: 20, padding: '20px 22px', minHeight: 290, display: 'flex', flexDirection: 'column', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)' }}
+                style={{ borderRadius: 20, padding: '20px 22px', minHeight: 290, display: 'flex', flexDirection: 'column', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)', cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                   <div className="lq" style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{card.icon}</div>
@@ -470,9 +523,9 @@ export default function Landing() {
           viewport={{ once: true, amount: 0.3 }}
           style={{ textAlign: 'center', zIndex: 10, position: 'relative', marginBottom: 60 }}
         >
-          <div style={{ display: 'inline-flex', borderRadius: 9999, padding: '6px 16px', color: '#7c3aed', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', fontSize: 12, fontWeight: 700, fontFamily: "'Barlow', sans-serif", letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 20 }}>
-            ✦ Platform Features
-          </div>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 12, display: 'block' }}>
+            Platform Features
+          </span>
           <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', color: '#0f172a', fontFamily: "'Barlow', sans-serif", fontWeight: 700, letterSpacing: '-1.5px', marginBottom: 16 }}>
             Designed for Modern Job Hunting
           </h2>
@@ -497,6 +550,8 @@ export default function Landing() {
           ].map((feat, i) => (
             <motion.div
               variants={itemVariants}
+              whileHover={{ y: -8, borderColor: 'rgba(124,58,237,0.25)', boxShadow: '0 16px 36px rgba(107,70,193,0.12)' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
               key={i}
               className="light-card-hover"
               style={{
@@ -506,7 +561,8 @@ export default function Landing() {
                 flexDirection: 'column',
                 background: 'rgba(255,255,255,0.85)',
                 border: '1px solid rgba(124,58,237,0.1)',
-                boxShadow: '0 2px 16px rgba(107,70,193,0.06), 0 1px 0 rgba(255,255,255,0.9) inset'
+                boxShadow: '0 2px 16px rgba(107,70,193,0.06), 0 1px 0 rgba(255,255,255,0.9) inset',
+                cursor: 'pointer'
               }}
             >
               <div style={{ marginBottom: 20, width: 48, height: 48, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(124,58,237,0.12)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', flexShrink: 0 }}>
@@ -527,9 +583,8 @@ export default function Landing() {
           style={{ maxWidth: 1200, margin: '64px auto 0', position: 'relative', zIndex: 10 }}
         >
           <div style={{ borderRadius: 24, padding: '40px 48px', background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(124,58,237,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 4px 24px rgba(107,70,193,0.07)' }}>
-            <h3 style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 700, color: '#1e1b4b', fontSize: '1.4rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-              🚀 Next-Gen Roadmap
-              <span style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 9999, border: '1px solid rgba(124,58,237,0.2)' }}>Coming Soon</span>
+            <h3 style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 700, color: '#1e1b4b', fontSize: '1.45rem', marginBottom: 8 }}>
+              Product Roadmap
             </h3>
             <p style={{ color: '#4a5568', fontSize: '0.95rem', marginBottom: 24, fontFamily: "'Barlow',sans-serif" }}>
               We are constantly updating ResuMatch with state-of-the-art tools. Here is what we are building right now:
@@ -563,9 +618,9 @@ export default function Landing() {
         style={{ paddingTop: 60, background: '#f0f4ff' }}
       >
         <div style={{ textAlign: 'center', padding: '0 24px', zIndex: 10 }}>
-          <div style={{ display: 'inline-flex', borderRadius: 9999, padding: '6px 16px', color: '#7c3aed', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', fontSize: 12, fontWeight: 700, fontFamily: "'Barlow', sans-serif", letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 20 }}>
-            ✦ Testimonials
-          </div>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 12, display: 'block' }}>
+            Testimonials
+          </span>
           <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', color: '#0f172a', fontFamily: "'Barlow', sans-serif", fontWeight: 700, letterSpacing: '-1.5px', marginBottom: 16 }}>
             Don't just take our words
           </h2>
@@ -664,9 +719,9 @@ export default function Landing() {
           transition={{ duration: 0.6 }}
           style={{ textAlign: 'center', zIndex: 10, position: 'relative', marginBottom: 60 }}
         >
-          <div style={{ display: 'inline-flex', borderRadius: 9999, padding: '6px 16px', color: '#7c3aed', background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)', fontSize: 12, fontWeight: 700, fontFamily: "'Barlow', sans-serif", letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 20 }}>
-            ✦ Affordable Plans
-          </div>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 12, display: 'block' }}>
+            Pricing Plans
+          </span>
           <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', color: '#0f172a', fontFamily: "'Barlow', sans-serif", fontWeight: 700, letterSpacing: '-1.5px', marginBottom: 16 }}>
             Ready to Clear ATS Filters?
           </h2>
@@ -685,8 +740,10 @@ export default function Landing() {
           {/* Plan 1 */}
           <motion.div 
             variants={itemVariants}
-            className="price-card-hover" 
-            style={{ borderRadius: 24, padding: 40, width: 320, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+            whileHover={{ y: -8, borderColor: 'rgba(124,58,237,0.22)', boxShadow: '0 16px 36px rgba(107,70,193,0.12)' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+            className="light-card-hover" 
+            style={{ borderRadius: 24, padding: 40, width: 320, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer' }}
           >
             <div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#475569', fontFamily: "'Barlow',sans-serif" }}>Basic</h3>
@@ -727,8 +784,10 @@ export default function Landing() {
           {/* Plan 2 */}
           <motion.div 
             variants={itemVariants}
-            className="price-card-hover" 
-            style={{ borderRadius: 24, padding: 40, width: 340, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '2px solid #7c3aed', boxShadow: '0 8px 32px rgba(124, 58, 237, 0.08)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+            whileHover={{ y: -8, boxShadow: '0 20px 48px rgba(124, 58, 237, 0.16)' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+            className="light-card-hover" 
+            style={{ borderRadius: 24, padding: 40, width: 340, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '2px solid #7c3aed', boxShadow: '0 8px 32px rgba(124, 58, 237, 0.08)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', cursor: 'pointer' }}
           >
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -773,8 +832,10 @@ export default function Landing() {
           {/* Plan 3 */}
           <motion.div 
             variants={itemVariants}
-            className="price-card-hover" 
-            style={{ borderRadius: 24, padding: 40, width: 320, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+            whileHover={{ y: -8, borderColor: 'rgba(124,58,237,0.22)', boxShadow: '0 16px 36px rgba(107,70,193,0.12)' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+            className="light-card-hover" 
+            style={{ borderRadius: 24, padding: 40, width: 320, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer' }}
           >
             <div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#475569', fontFamily: "'Barlow',sans-serif" }}>Elite</h3>
