@@ -74,8 +74,9 @@ export default function Auth() {
       />
 
       <div className="auth-card liquid-glass">
-        <div className="auth-logo" onClick={() => navigate('/')}>
-          ResuMatch<span className="logo-dot">.</span>
+        <div className="auth-logo" onClick={() => navigate('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/App_logo.png" alt="ResuMatch Logo" style={{ height: '36px', width: 'auto' }} />
+          <span>ResuMatch<span className="logo-dot">.</span></span>
         </div>
         <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
         <p className="auth-sub">
@@ -117,6 +118,27 @@ export default function Auth() {
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" />
           Continue with Google
         </button>
+
+        <div style={{ marginTop: '20px', position: 'relative', zIndex: 10 }}>
+          <button 
+            onClick={() => navigate('/')} 
+            className="btn-ghost" 
+            style={{ 
+              width: '100%', 
+              background: 'transparent', 
+              border: '1px solid rgba(255, 255, 255, 0.15)', 
+              color: '#94a3b8',
+              borderRadius: '12px',
+              padding: '12px',
+              fontSize: '0.9rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            ← Back to Home
+          </button>
+        </div>
       </div>
     </div>
   );

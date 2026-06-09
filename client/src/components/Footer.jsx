@@ -11,8 +11,9 @@ export default function Footer() {
 
       <div className="footer-content">
         <div className="footer-brand">
-          <div className="footer-logo" onClick={() => navigate('/')}>
-            ResuMatch<span className="logo-dot">.</span>
+          <div className="footer-logo" onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/App_logo.png" alt="ResuMatch Logo" style={{ height: '32px', width: 'auto' }} />
+            <span>ResuMatch<span className="logo-dot">.</span></span>
           </div>
           <p className="footer-tagline">
             Making every application count — empowering candidates to stand out and clear modern ATS filters.

@@ -112,9 +112,16 @@ export default function Landing() {
           <div
             className="nav-logo"
             onClick={() => navigate('/')}
-            style={{ color: onLight ? '#0f172a' : '#ffffff', transition: 'color 0.3s ease' }}
+            style={{ 
+              color: onLight ? '#0f172a' : '#ffffff', 
+              transition: 'color 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}
           >
-            ResuMatch<span className="logo-dot">.</span>
+            <img src="/App_logo.png" alt="ResuMatch Logo" style={{ height: '32px', width: 'auto' }} />
+            <span>ResuMatch<span className="logo-dot">.</span></span>
           </div>
         </div>
 
