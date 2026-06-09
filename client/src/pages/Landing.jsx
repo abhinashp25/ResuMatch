@@ -177,7 +177,7 @@ export default function Landing() {
   ];
 
   return (
-    <div id="home" ref={homeRef} style={{ background: '#000', color: '#fff', overflowX: 'hidden' }}>
+    <div style={{ background: '#000', color: '#fff', overflowX: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600;700;800&display=swap');
 
@@ -218,14 +218,32 @@ export default function Landing() {
           text-shadow: 0 2px 14px rgba(0,0,0,0.7), 0 0 4px rgba(0,0,0,0.5);
         }
 
+        /* Scoped How It Works card style with smooth CSS hover and no double-animation conflict */
+        .how-card {
+          background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1.5px solid rgba(255,255,255,0.18);
+          box-shadow: 0 4px 24px -4px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.14);
+          position: relative;
+          overflow: hidden;
+          will-change: transform;
+          transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .how-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 16px 40px -4px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.25);
+          border-color: rgba(255,255,255,0.32);
+        }
+
         /* Light section card hover — used in Features & Pricing on #f0f4ff background */
         .light-card-hover {
           will-change: transform;
-          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+          transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .light-card-hover:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 16px 40px rgba(107,70,193,0.10) !important;
+          transform: translateY(-8px);
+          box-shadow: 0 16px 40px rgba(107,70,193,0.12) !important;
           border-color: rgba(124,58,237,0.22) !important;
         }
 
@@ -369,7 +387,7 @@ export default function Landing() {
       </nav>
 
       {/* ══════════════ HERO ══════════════ */}
-      <section style={{ position: 'relative', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#040307 radial-gradient(circle at 70% center, #1b1530 0%, #030206 100%)' }}>
+      <section id="home" ref={homeRef} style={{ position: 'relative', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#040307 radial-gradient(circle at 70% center, #1b1530 0%, #030206 100%)' }}>
         <motion.img
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -472,16 +490,14 @@ export default function Landing() {
             {cards.map((card, i) => (
               <motion.div 
                 variants={itemVariants}
-                whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.32)', boxShadow: '0 14px 40px -4px rgba(0,0,0,0.36)' }}
-                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
                 key={i} 
-                className="lq" 
-                style={{ borderRadius: 20, padding: '20px 22px', minHeight: 290, display: 'flex', flexDirection: 'column', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)', cursor: 'pointer' }}
+                className="how-card" 
+                style={{ borderRadius: 20, padding: '20px 22px', minHeight: 290, display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                  <div className="lq" style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{card.icon}</div>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>{card.icon}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 4, maxWidth: '75%' }}>
-                    {card.tags.map(t => <span key={t} className="lq" style={{ borderRadius: 9999, padding: '3px 10px', fontSize: 9.5, color: 'rgba(255,255,255,0.9)', fontFamily: "'Barlow',sans-serif", whiteSpace: 'nowrap' }}>{t}</span>)}
+                    {card.tags.map(t => <span key={t} style={{ borderRadius: 9999, padding: '3px 10px', fontSize: 9.5, color: 'rgba(255,255,255,0.9)', fontFamily: "'Barlow',sans-serif", whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>{t}</span>)}
                   </div>
                 </div>
                 <div style={{ flex: 1 }} />
@@ -550,8 +566,6 @@ export default function Landing() {
           ].map((feat, i) => (
             <motion.div
               variants={itemVariants}
-              whileHover={{ y: -8, borderColor: 'rgba(124,58,237,0.25)', boxShadow: '0 16px 36px rgba(107,70,193,0.12)' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
               key={i}
               className="light-card-hover"
               style={{
@@ -591,12 +605,49 @@ export default function Landing() {
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
               {[
-                { emoji: '🎙️', title: 'AI Mock Interviews', desc: 'Voice-to-voice mock conversations with a simulated recruiter that analyzes tone, content, and STAR alignment.' },
-                { emoji: '📝', title: 'AI Resume Builder', desc: 'Build ATS-optimized resumes with inline AI autocomplete, keyword suggestions, and drag-and-drop sections.' },
-                { emoji: '✉️', title: 'Cover Letter Tailoring', desc: 'Generate high-conversion cover letters tailored to the keyword gaps of your target job description.' }
+                { 
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                      <line x1="12" y1="19" x2="12" y2="22"/>
+                    </svg>
+                  ),
+                  bg: 'rgba(124,58,237,0.08)',
+                  color: '#7c3aed',
+                  title: 'AI Mock Interviews',
+                  desc: 'Voice-to-voice mock conversations with a simulated recruiter that analyzes tone, content, and STAR alignment.'
+                },
+                { 
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  ),
+                  bg: 'rgba(37,99,235,0.08)',
+                  color: '#2563eb',
+                  title: 'AI Resume Builder',
+                  desc: 'Build ATS-optimized resumes with inline AI autocomplete, keyword suggestions, and drag-and-drop sections.'
+                },
+                { 
+                  icon: (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 12V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9"/>
+                      <polyline points="22,6 12,13 2,6"/>
+                      <path d="M19 16l-1 2-2 1 2 1 1 2 1-2 2-1-2-1z"/>
+                    </svg>
+                  ),
+                  bg: 'rgba(16,185,129,0.08)',
+                  color: '#10b981',
+                  title: 'Cover Letter Tailoring',
+                  desc: 'Generate high-conversion cover letters tailored to the keyword gaps of your target job description.'
+                }
               ].map((up, idx) => (
                 <div key={idx} style={{ background: 'rgba(124,58,237,0.04)', padding: '20px 22px', borderRadius: 16, border: '1px solid rgba(124,58,237,0.08)' }}>
-                  <div style={{ fontSize: 24, marginBottom: 10 }}>{up.emoji}</div>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: up.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: up.color, marginBottom: 14 }}>
+                    {up.icon}
+                  </div>
                   <h4 style={{ color: '#6d28d9', fontFamily: "'Barlow', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 8 }}>{up.title}</h4>
                   <p style={{ fontSize: 13, color: '#4a5568', fontFamily: "'Barlow',sans-serif", fontWeight: 400, lineHeight: 1.5 }}>{up.desc}</p>
                 </div>
@@ -629,17 +680,21 @@ export default function Landing() {
           </p>
         </div>
 
-        <div className="marquee-container" style={{ maskImage: 'linear-gradient(to right, transparent, #f8fafc 12%, #f8fafc 88%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, #f8fafc 12%, #f8fafc 88%, transparent)' }}>
+        <div className="marquee-container" style={{ paddingTop: '16px', paddingBottom: '16px', maskImage: 'linear-gradient(to right, transparent, #f8fafc 12%, #f8fafc 88%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, #f8fafc 12%, #f8fafc 88%, transparent)' }}>
           <div className="marquee-row left">
             {[
               { name: 'Avery Johnson', handle: 'averywrites', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face', text: 'ResuMatch made undercutting all of my competitors an absolute breeze. Got a 90% score and landed my interview at Google!' },
+              { name: 'Elena Rostova', handle: 'elenacodes', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face', text: 'I was skeptical about AI resume checkers, but the keyword gap analysis here is incredibly precise. It helped me align my resume for a Senior React role and I got a call back in 48 hours.' },
               { name: 'Briar Martin', handle: 'neilstellar', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face', text: 'The multi-model fallback feature saved me. My resume was not parsing elsewhere, but here it worked instantly.' },
+              { name: 'Marcus Chen', handle: 'marcuscodes', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face', text: 'The job tracker combined with the interview readiness checklist is a game changer. It kept me organized across 15+ applications, leading to 3 offers.' },
               { name: 'Jordan Lee', handle: 'jordantalks', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face', text: 'Actionable suggestions are gold. Adding the exact keywords missing from my profile bumped my call-backs by 3x.' },
               { name: 'Morgan Davis', handle: 'morgancodes', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face', text: 'Super clean UI and blazing fast analysis. The liquid glass aesthetics make it a joy to use.' },
             ].concat([
               { name: 'Avery Johnson', handle: 'averywrites', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face', text: 'ResuMatch made undercutting all of my competitors an absolute breeze. Got a 90% score and landed my interview at Google!' },
+              { name: 'Elena Rostova', handle: 'elenacodes', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=face', text: 'I was skeptical about AI resume checkers, but the keyword gap analysis here is incredibly precise. It helped me align my resume for a Senior React role and I got a call back in 48 hours.' },
               { name: 'Briar Martin', handle: 'neilstellar', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face', text: 'The multi-model fallback feature saved me. My resume was not parsing elsewhere, but here it worked instantly.' },
-              { name: 'Jordan Lee', handle: 'jordantalks', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face', text: 'Jordan made editing simple and structural improvements visible instantly.' },
+              { name: 'Marcus Chen', handle: 'marcuscodes', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face', text: 'The job tracker combined with the interview readiness checklist is a game changer. It kept me organized across 15+ applications, leading to 3 offers.' },
+              { name: 'Jordan Lee', handle: 'jordantalks', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face', text: 'Actionable suggestions are gold. Adding the exact keywords missing from my profile bumped my call-backs by 3x.' },
               { name: 'Morgan Davis', handle: 'morgancodes', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&h=80&fit=crop&crop=face', text: 'Super clean UI and blazing fast analysis. The liquid glass aesthetics make it a joy to use.' },
             ]).map((t, idx) => (
               <div key={idx} className="testimonial-card">
@@ -670,12 +725,16 @@ export default function Landing() {
           <div className="marquee-row right">
             {[
               { name: 'Taylor Smith', handle: 'taylordesign', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop&crop=face', text: 'I love the detailed keyword gap analysis. It felt like having a personal resume coach beside me.' },
+              { name: 'Sarah Jenkins', handle: 'sarahj_tech', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face', text: 'The mock interview prep pacing timer is brilliant. Practicing with the 2-minute visual stopwatch helped me structure my answers using STAR perfectly.' },
               { name: 'Alex Rivera', handle: 'alexdev', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face', text: 'Saved my history and allowed me to track matching improvements over time. Simply brilliant.' },
+              { name: 'David Kim', handle: 'davidkim_dev', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=face', text: 'As a self-taught junior dev, I didn\'t know how to word my projects. ResuMatch pointed out exactly what action verbs and tech keywords were missing. Landed my first dev role!' },
               { name: 'Sam Wilson', handle: 'sambuilds', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face', text: 'From a 45% match score to an 85% match score. Got the offer last week! Highly recommend ResuMatch.' },
               { name: 'Casey Jones', handle: 'caseyops', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=face', text: 'The ATS compatibility checking is top tier. Understood exactly what keywords were missing.' },
             ].concat([
               { name: 'Taylor Smith', handle: 'taylordesign', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop&crop=face', text: 'I love the detailed keyword gap analysis. It felt like having a personal resume coach beside me.' },
+              { name: 'Sarah Jenkins', handle: 'sarahj_tech', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face', text: 'The mock interview prep pacing timer is brilliant. Practicing with the 2-minute visual stopwatch helped me structure my answers using STAR perfectly.' },
               { name: 'Alex Rivera', handle: 'alexdev', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face', text: 'Saved my history and allowed me to track matching improvements over time. Simply brilliant.' },
+              { name: 'David Kim', handle: 'davidkim_dev', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=face', text: 'As a self-taught junior dev, I didn\'t know how to word my projects. ResuMatch pointed out exactly what action verbs and tech keywords were missing. Landed my first dev role!' },
               { name: 'Sam Wilson', handle: 'sambuilds', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face', text: 'From a 45% match score to an 85% match score. Got the offer last week! Highly recommend ResuMatch.' },
               { name: 'Casey Jones', handle: 'caseyops', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=face', text: 'The ATS compatibility checking is top tier. Understood exactly what keywords were missing.' },
             ]).map((t, idx) => (
@@ -740,8 +799,6 @@ export default function Landing() {
           {/* Plan 1 */}
           <motion.div 
             variants={itemVariants}
-            whileHover={{ y: -8, borderColor: 'rgba(124,58,237,0.22)', boxShadow: '0 16px 36px rgba(107,70,193,0.12)' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
             className="light-card-hover" 
             style={{ borderRadius: 24, padding: 40, width: 320, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer' }}
           >
@@ -784,8 +841,6 @@ export default function Landing() {
           {/* Plan 2 */}
           <motion.div 
             variants={itemVariants}
-            whileHover={{ y: -8, boxShadow: '0 20px 48px rgba(124, 58, 237, 0.16)' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
             className="light-card-hover" 
             style={{ borderRadius: 24, padding: 40, width: 340, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '2px solid #7c3aed', boxShadow: '0 8px 32px rgba(124, 58, 237, 0.08)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', cursor: 'pointer' }}
           >
@@ -832,8 +887,6 @@ export default function Landing() {
           {/* Plan 3 */}
           <motion.div 
             variants={itemVariants}
-            whileHover={{ y: -8, borderColor: 'rgba(124,58,237,0.22)', boxShadow: '0 16px 36px rgba(107,70,193,0.12)' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
             className="light-card-hover" 
             style={{ borderRadius: 24, padding: 40, width: 320, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#ffffff', border: '1px solid rgba(15,23,42,0.08)', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', cursor: 'pointer' }}
           >
