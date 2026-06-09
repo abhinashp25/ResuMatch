@@ -411,7 +411,7 @@ body {
 .testimonials-section {
   position: relative;
   padding: 100px 0 60px;
-  background: #f8fafc;
+  background: #f0f4ff;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -427,8 +427,8 @@ body {
   width: 100%;
   margin-top: 50px;
   position: relative;
-  mask-image: linear-gradient(to right, transparent, #f8fafc 12%, #f8fafc 88%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, #f8fafc 12%, #f8fafc 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, #f0f4ff 12%, #f0f4ff 88%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #f0f4ff 12%, #f0f4ff 88%, transparent);
 }
 
 .marquee-row {
@@ -467,16 +467,17 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(124, 58, 237, 0.1);
+  box-shadow: 0 4px 24px rgba(107, 70, 193, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform;
 }
 
 .testimonial-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(124, 58, 237, 0.3);
-  box-shadow: 0 12px 30px rgba(124, 58, 237, 0.08);
+  transform: translateY(-5px);
+  border-color: rgba(124, 58, 237, 0.22);
+  box-shadow: 0 16px 40px rgba(107, 70, 193, 0.1);
 }
 
 .testimonial-user {
@@ -534,8 +535,8 @@ body {
 .footer-container {
   position: relative;
   padding: 80px 64px 40px;
-  background: #f1f5f9;
-  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  background: #e8edfb;
+  border-top: 1px solid rgba(107, 70, 193, 0.1);
   overflow: hidden;
   z-index: 10;
 }

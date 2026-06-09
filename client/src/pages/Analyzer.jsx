@@ -12,7 +12,8 @@ export default function Analyzer() {
   const { user } = useAuth();
 
   useEffect(() => {
-    const savedResult = localStorage.getItem('selected_analysis_result');
+    if (!user?.uid) return;
+    const savedResult = localStorage.getItem(`selected_result_${user.uid}`);
     if (savedResult) {
       try {
         const parsed = JSON.parse(savedResult);
@@ -22,12 +23,12 @@ export default function Analyzer() {
           missingKeywords: parsed.missingKeywords || [],
           suggestions: parsed.suggestions || []
         });
-        localStorage.removeItem('selected_analysis_result');
+        localStorage.removeItem(`selected_result_${user.uid}`);
       } catch (e) {
         console.error(e);
       }
     }
-  }, []);
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!file || !jobDesc) {
@@ -45,7 +46,8 @@ export default function Analyzer() {
       const data = res.data.data;
       setResult(data);
 
-      // Save to history in localStorage
+      // Save to this user's private history in localStorage
+      const storageKey = `analyses_${user.uid}`;
       const newAnalysis = {
         id: Date.now(),
         filename: file.name,
@@ -55,9 +57,9 @@ export default function Analyzer() {
         suggestions: data.suggestions || [],
         timestamp: new Date().toISOString()
       };
-      const saved = localStorage.getItem('recent_analyses');
+      const saved = localStorage.getItem(storageKey);
       const analyses = saved ? JSON.parse(saved) : [];
-      localStorage.setItem('recent_analyses', JSON.stringify([newAnalysis, ...analyses]));
+      localStorage.setItem(storageKey, JSON.stringify([newAnalysis, ...analyses].slice(0, 50)));
     } catch (err) {
       setError('Analysis failed. Check if server is running.');
     } finally {
@@ -71,6 +73,30 @@ export default function Analyzer() {
         <div className="analyzer-header" style={{ marginBottom: '40px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '2.2rem', fontWeight: 800 }}>Resume Analyzer</h1>
           <p style={{ color: 'var(--text-light-muted)' }}>Upload your resume and paste a job description to get your AI match score</p>
+          {result && (
+            <button
+              onClick={() => navigate('/app')}
+              style={{
+                marginTop: 16,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'transparent',
+                border: '1px solid rgba(124,58,237,0.25)',
+                color: '#7c3aed',
+                borderRadius: 9999,
+                padding: '8px 18px',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => { e.target.style.background = 'rgba(124,58,237,0.07)'; }}
+              onMouseLeave={e => { e.target.style.background = 'transparent'; }}
+            >
+              ← Back to Dashboard
+            </button>
+          )}
         </div>
 
         <div className="analyzer-grid" style={{ marginBottom: '32px' }}>

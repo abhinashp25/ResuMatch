@@ -9,27 +9,20 @@ export default function Dashboard() {
   const [greeting, setGreeting] = useState('Welcome');
   const [recentAnalyses, setRecentAnalyses] = useState([]);
   
-  // Set personalized greeting
+  // Load recent analyses scoped to this user
   useEffect(() => {
     const hours = new Date().getHours();
-    if (hours < 12) {
-      setGreeting('Good morning');
-    } else if (hours < 18) {
-      setGreeting('Good afternoon');
-    } else {
-      setGreeting('Good evening');
-    }
+    if (hours < 12) setGreeting('Good morning');
+    else if (hours < 18) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
 
-    // Load recent analyses from localStorage
-    const saved = localStorage.getItem('recent_analyses');
-    if (saved) {
-      try {
-        setRecentAnalyses(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
+    if (user?.uid) {
+      const saved = localStorage.getItem(`analyses_${user.uid}`);
+      if (saved) {
+        try { setRecentAnalyses(JSON.parse(saved)); } catch (e) { console.error(e); }
       }
     }
-  }, []);
+  }, [user]);
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'User';
 
@@ -166,11 +159,12 @@ export default function Dashboard() {
                     </td>
                     <td>{new Date(item.timestamp).toLocaleDateString()}</td>
                     <td>
-                      <button 
-                        className="app-btn-liquid app-btn-liquid-secondary" 
+                      <button
+                        className="app-btn-liquid app-btn-liquid-secondary"
                         style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem' }}
                         onClick={() => {
-                          localStorage.setItem('selected_analysis_result', JSON.stringify(item));
+                          // Store selected result under user-scoped key for privacy
+                          localStorage.setItem(`selected_result_${user.uid}`, JSON.stringify(item));
                           navigate('/app/analyzer');
                         }}
                       >

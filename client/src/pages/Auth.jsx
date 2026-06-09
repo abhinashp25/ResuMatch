@@ -18,16 +18,34 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Simple but robust email format check
+  const isValidEmail = (val) => {
+    const pattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    return pattern.test(val);
+  };
+
   const handleEmailAuth = async () => {
     if (!email || !password) {
       setError('Please fill in all fields.');
       return;
     }
-    if (!isLogin && !fullName) {
-      setError('Please enter your full name to sign up.');
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address (e.g. yourname@gmail.com).');
       return;
     }
-    
+    if (!isLogin && !fullName) {
+      setError('Please enter your full name to create an account.');
+      return;
+    }
+    if (!isLogin && fullName.trim().length < 2) {
+      setError('Please enter your real full name (at least 2 characters).');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -35,7 +53,7 @@ export default function Auth() {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: fullName });
+        await updateProfile(userCredential.user, { displayName: fullName.trim() });
       }
       navigate('/app');
     } catch (err) {
@@ -43,25 +61,28 @@ export default function Auth() {
       let errMsg = 'An unexpected error occurred. Please try again.';
       switch (err.code) {
         case 'auth/user-not-found':
-          errMsg = 'No account found with this email. Please click the "Sign Up" tab above to register first.';
+          errMsg = '❌ No account exists for this email. Please switch to Sign Up to create one.';
           break;
         case 'auth/wrong-password':
-          errMsg = 'Incorrect password. Please verify your password and try again.';
+          errMsg = '❌ Incorrect password. Please check your password and try again.';
           break;
         case 'auth/invalid-credential':
-          errMsg = 'Invalid credentials. If you are a new user, please click the "Sign Up" tab above to register first.';
+          errMsg = '❌ Email or password is incorrect. If you are new here, please use the Sign Up tab to register first.';
           break;
         case 'auth/email-already-in-use':
-          errMsg = 'This email is already registered. Please sign in instead.';
+          errMsg = '⚠️ This email is already registered. Switch to Sign In to access your account.';
           break;
         case 'auth/invalid-email':
-          errMsg = 'Invalid email format. Please enter a valid email address.';
+          errMsg = '❌ Invalid email format. Please enter a valid email like yourname@gmail.com.';
           break;
         case 'auth/weak-password':
-          errMsg = 'Password is too weak. Please use at least 6 characters.';
+          errMsg = '⚠️ Your password is too weak. Please use at least 6 characters with a mix of letters and numbers.';
           break;
         case 'auth/too-many-requests':
-          errMsg = 'Too many failed login attempts. Access is temporarily disabled. Please try again in a few minutes.';
+          errMsg = '⚠️ Too many failed attempts. Your account is temporarily locked. Please try again in a few minutes or reset your password.';
+          break;
+        case 'auth/network-request-failed':
+          errMsg = '❌ Network error. Please check your internet connection and try again.';
           break;
         default:
           errMsg = err.message || errMsg;

@@ -9,6 +9,7 @@ import Documents from './components/Documents';
 import SavedJobs from './components/SavedJobs';
 import Interview from './components/Interview';
 import ResumeExamples from './components/ResumeExamples';
+import Profile from './components/Profile';
 
 export default function App() {
   return (
@@ -46,6 +47,11 @@ export default function App() {
           <Route path="/app/examples" element={
             <ProtectedRoute>
               <ResumeExamples />
+            </ProtectedRoute>
+          } />
+          <Route path="/app/profile" element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           } />
         </Routes>

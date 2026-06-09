@@ -72,26 +72,27 @@ export default function Landing() {
 
   const onLight = scrollY > window.innerHeight * 1.85;
 
-  // Stagger Animation Variants
+  // Smooth animation variants — no stagger glitch, uses spring physics
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.05
-      }
+      transition: { staggerChildren: 0.1, delayChildren: 0.0 }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.97 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: 'spring', stiffness: 260, damping: 28 }
     }
+  };
+
+  const fadeUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } }
   };
 
   const cards = [
@@ -131,56 +132,71 @@ export default function Landing() {
     <div id="home" ref={homeRef} style={{ background: '#000', color: '#fff', overflowX: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600;700;800&display=swap');
+
+        /* Dark glass for dark background sections */
         .lq {
-          background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
-          backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-          box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255,255,255,0.15);
-          border: 1.5px solid rgba(255, 255, 255, 0.2);
-          position: relative; overflow: hidden;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          box-shadow: 0 4px 24px -4px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.14);
+          border: 1.5px solid rgba(255,255,255,0.18);
+          position: relative;
+          overflow: hidden;
+          will-change: transform;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
         .lq:hover {
-          background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 32px -1px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255,255,255,0.25);
-          border-color: rgba(255, 255, 255, 0.3);
+          transform: translateY(-3px);
+          box-shadow: 0 10px 30px -4px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.22);
+          border-color: rgba(255,255,255,0.28);
         }
         .lqs {
-          background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
-          backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255,255,255,0.25);
-          border: 1.5px solid rgba(255, 255, 255, 0.2);
-          position: relative; overflow: hidden;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          background: linear-gradient(135deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.03) 100%);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          box-shadow: 0 8px 32px -4px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.22);
+          border: 1.5px solid rgba(255,255,255,0.2);
+          position: relative;
+          overflow: hidden;
+          will-change: transform;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
         .lqs:hover {
-          background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%);
-          transform: translateY(-2px);
-          box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255,255,255,0.35);
-          border-color: rgba(255, 255, 255, 0.35);
+          transform: translateY(-3px);
+          box-shadow: 0 14px 40px -4px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.3);
+          border-color: rgba(255,255,255,0.32);
         }
         .text-glow {
-          text-shadow: 0 2px 14px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.6);
-        }
-        .nav-pill span { padding: 8px 12px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.9); cursor: pointer; font-family: 'Barlow', sans-serif; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
-        .nav-pill span:hover { color: #fff; text-shadow: 0 2px 8px rgba(255,255,255,0.4); }
-        
-        .price-card-hover {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .price-card-hover:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
-          border-color: rgba(124, 58, 237, 0.22) !important;
+          text-shadow: 0 2px 14px rgba(0,0,0,0.7), 0 0 4px rgba(0,0,0,0.5);
         }
 
+        /* Light section card hover — used in Features & Pricing on #f0f4ff background */
+        .light-card-hover {
+          will-change: transform;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        .light-card-hover:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 16px 40px rgba(107,70,193,0.10) !important;
+          border-color: rgba(124,58,237,0.22) !important;
+        }
+
+        /* Pricing buttons */
+        .price-btn-primary {
+          will-change: transform;
+          transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
         .price-btn-primary:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+          box-shadow: 0 8px 24px rgba(124,58,237,0.38) !important;
+        }
+        .price-btn-secondary {
+          will-change: transform;
+          transition: transform 0.22s ease, background 0.22s ease;
         }
         .price-btn-secondary:hover {
-          background: rgba(124, 58, 237, 0.06) !important;
           transform: translateY(-2px);
+          background: rgba(124,58,237,0.07) !important;
         }
 
         @media(max-width:768px){
@@ -437,38 +453,39 @@ export default function Landing() {
           </motion.div>
         </div>
 
-        {/* Transition overlay to blend with the white Features section background */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, background: 'linear-gradient(180deg, transparent 0%, #ffffff 100%)', zIndex: 2 }} />
+        {/* Transition overlay blending into the light lavender Features section */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, background: 'linear-gradient(180deg, transparent 0%, #f0f4ff 100%)', zIndex: 2 }} />
       </section>
 
       {/* ══════════════ FEATURES ══════════════ */}
-      <section id="features" ref={featuresRef} style={{ position: 'relative', background: '#ffffff', color: '#0f172a', padding: '96px 64px 60px', zIndex: 10 }}>
-        <div style={{ position: 'absolute', top: '20%', left: '10%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(37,99,235,0.03) 0%, transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
+      <section id="features" ref={featuresRef} style={{ position: 'relative', background: '#f0f4ff', color: '#0f172a', padding: '96px 64px 80px', zIndex: 10 }}>
+        {/* Soft decorative blobs */}
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '15%', right: '8%', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(37,99,235,0.06) 0%, transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
-        <motion.div 
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
           style={{ textAlign: 'center', zIndex: 10, position: 'relative', marginBottom: 60 }}
         >
-          <div style={{ display: 'inline-flex', borderRadius: 9999, padding: '6px 16px', color: '#7c3aed', background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)', fontSize: 12, fontWeight: 700, fontFamily: "'Barlow', sans-serif", letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 20 }}>
+          <div style={{ display: 'inline-flex', borderRadius: 9999, padding: '6px 16px', color: '#7c3aed', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.18)', fontSize: 12, fontWeight: 700, fontFamily: "'Barlow', sans-serif", letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 20 }}>
             ✦ Platform Features
           </div>
           <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', color: '#0f172a', fontFamily: "'Barlow', sans-serif", fontWeight: 700, letterSpacing: '-1.5px', marginBottom: 16 }}>
             Designed for Modern Job Hunting
           </h2>
-          <p style={{ fontSize: 16, color: '#475569', maxWidth: 600, margin: '0 auto', lineHeight: 1.6, fontFamily: "'Barlow', sans-serif", fontWeight: 400 }}>
+          <p style={{ fontSize: 16, color: '#4a5568', maxWidth: 600, margin: '0 auto', lineHeight: 1.6, fontFamily: "'Barlow', sans-serif", fontWeight: 400 }}>
             Everything you need to beat ATS filters, master your mock interviews, and land your dream offer.
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.15 }}
+          viewport={{ once: true, amount: 0.1 }}
           style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 10 }}
         >
           {[
@@ -478,73 +495,72 @@ export default function Landing() {
             { img: '/Timer_logo.avif', title: 'Practice Pacing Timer', desc: 'Practice mock answers under 2 minutes with our built-in interactive stopwatch countdown timer.' },
             { img: '/document_logo.webp', title: 'Documents Safe Vault', desc: 'Keep all your customized resume drafts, cover letters, and documents organized in a clean card layout.' }
           ].map((feat, i) => (
-            <motion.div 
+            <motion.div
               variants={itemVariants}
-              key={i} 
-              className="price-card-hover" 
-              style={{ 
-                borderRadius: 20, 
-                padding: 30, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                background: '#ffffff', 
-                border: '1px solid rgba(15,23,42,0.08)', 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
+              key={i}
+              className="light-card-hover"
+              style={{
+                borderRadius: 20,
+                padding: 30,
+                display: 'flex',
+                flexDirection: 'column',
+                background: 'rgba(255,255,255,0.85)',
+                border: '1px solid rgba(124,58,237,0.1)',
+                boxShadow: '0 2px 16px rgba(107,70,193,0.06), 0 1px 0 rgba(255,255,255,0.9) inset'
               }}
             >
-              <div style={{ marginBottom: 20, width: 48, height: 48, borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', flexShrink: 0 }}>
+              <div style={{ marginBottom: 20, width: 48, height: 48, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(124,58,237,0.12)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', flexShrink: 0 }}>
                 <img src={feat.img} alt={feat.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-              <h3 style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 600, color: '#0f172a', fontSize: 20, marginBottom: 10 }}>{feat.title}</h3>
-              <p style={{ fontSize: 14, color: '#475569', fontFamily: "'Barlow',sans-serif", fontWeight: 400, lineHeight: 1.5 }}>{feat.desc}</p>
+              <h3 style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 700, color: '#1e1b4b', fontSize: 19, marginBottom: 10 }}>{feat.title}</h3>
+              <p style={{ fontSize: 14, color: '#4a5568', fontFamily: "'Barlow',sans-serif", fontWeight: 400, lineHeight: 1.6 }}>{feat.desc}</p>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* ─── UPCOMING FEATURES ─── */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+        {/* ─── UPCOMING FEATURES ROADMAP ─── */}
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
           style={{ maxWidth: 1200, margin: '64px auto 0', position: 'relative', zIndex: 10 }}
         >
-          <div style={{ borderRadius: 24, padding: '40px 48px', background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.04) 0%, rgba(255, 255, 255, 0.6) 100%)', border: '1px solid rgba(124, 58, 237, 0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(0,0,0,0.02)' }}>
-            <h3 style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 700, color: '#0f172a', fontSize: '1.5rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/Coming_logo.avif" alt="Coming Soon" style={{ width: 32, height: 32, borderRadius: '8px', objectFit: 'cover' }} />
-               Next-Gen Roadmap (Coming Soon)
+          <div style={{ borderRadius: 24, padding: '40px 48px', background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(124,58,237,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 4px 24px rgba(107,70,193,0.07)' }}>
+            <h3 style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 700, color: '#1e1b4b', fontSize: '1.4rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+              🚀 Next-Gen Roadmap
+              <span style={{ background: 'rgba(124,58,237,0.1)', color: '#7c3aed', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 9999, border: '1px solid rgba(124,58,237,0.2)' }}>Coming Soon</span>
             </h3>
-            <p style={{ color: '#475569', fontSize: '0.95rem', marginBottom: 24, fontFamily: "'Barlow',sans-serif" }}>
+            <p style={{ color: '#4a5568', fontSize: '0.95rem', marginBottom: 24, fontFamily: "'Barlow',sans-serif" }}>
               We are constantly updating ResuMatch with state-of-the-art tools. Here is what we are building right now:
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
               {[
-                { title: 'Interactive AI Mock Interviews', desc: 'Engage in voice-to-voice mock conversations with a simulated recruiter that analyzes your tone, content, and STAR alignment.' },
-                { title: 'AI-Powered Resume Builder', desc: 'Create beautiful, ATS-optimized templates from scratch with inline AI autocomplete, keyword suggestions, and drag-and-drop sections.' },
-                { title: 'Auto Cover Letter Tailoring', desc: 'Generate high-conversion cover letters specifically tailored to the matching gap keywords of your target job description.' }
+                { emoji: '🎙️', title: 'AI Mock Interviews', desc: 'Voice-to-voice mock conversations with a simulated recruiter that analyzes tone, content, and STAR alignment.' },
+                { emoji: '📝', title: 'AI Resume Builder', desc: 'Build ATS-optimized resumes with inline AI autocomplete, keyword suggestions, and drag-and-drop sections.' },
+                { emoji: '✉️', title: 'Cover Letter Tailoring', desc: 'Generate high-conversion cover letters tailored to the keyword gaps of your target job description.' }
               ].map((up, idx) => (
-                <div key={idx} style={{ background: 'rgba(255,255,255,0.4)', padding: 20, borderRadius: 16, border: '1px solid rgba(0,0,0,0.04)' }}>
-                  <h4 style={{ color: '#7c3aed', fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: 16, marginBottom: 8 }}>{up.title}</h4>
-                  <p style={{ fontSize: 13, color: '#475569', fontFamily: "'Barlow',sans-serif", fontWeight: 400, lineHeight: 1.45 }}>{up.desc}</p>
+                <div key={idx} style={{ background: 'rgba(124,58,237,0.04)', padding: '20px 22px', borderRadius: 16, border: '1px solid rgba(124,58,237,0.08)' }}>
+                  <div style={{ fontSize: 24, marginBottom: 10 }}>{up.emoji}</div>
+                  <h4 style={{ color: '#6d28d9', fontFamily: "'Barlow', sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 8 }}>{up.title}</h4>
+                  <p style={{ fontSize: 13, color: '#4a5568', fontFamily: "'Barlow',sans-serif", fontWeight: 400, lineHeight: 1.5 }}>{up.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </motion.div>
-        
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 120, background: 'linear-gradient(180deg, transparent 0%, #f8fafc 100%)', zIndex: 2 }} />
       </section>
 
       {/* ══════════════ TESTIMONIALS ══════════════ */}
-      <motion.section 
-        id="testimonials" 
-        ref={testimonialsRef} 
-        className="testimonials-section" 
-        initial={{ opacity: 0, y: 35 }}
-        whileInView={{ opacity: 1, y: 0 }}
+      <motion.section
+        id="testimonials"
+        ref={testimonialsRef}
+        className="testimonials-section"
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8 }}
-        style={{ paddingTop: 60, background: '#f8fafc' }}
+        style={{ paddingTop: 60, background: '#f0f4ff' }}
       >
         <div style={{ textAlign: 'center', padding: '0 24px', zIndex: 10 }}>
           <div style={{ display: 'inline-flex', borderRadius: 9999, padding: '6px 16px', color: '#7c3aed', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', fontSize: 12, fontWeight: 700, fontFamily: "'Barlow', sans-serif", letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 20 }}>
@@ -634,11 +650,11 @@ export default function Landing() {
           </div>
         </div>
         
-        <div style={{ width: '100%', height: 80, background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)' }} />
+        <div style={{ width: '100%', height: 60, background: '#f0f4ff' }} />
       </motion.section>
 
       {/* ══════════════ PRICING ══════════════ */}
-      <section id="pricing" ref={pricingRef} style={{ position: 'relative', background: '#ffffff', color: '#0f172a', padding: '96px 64px 96px', zIndex: 10 }}>
+      <section id="pricing" ref={pricingRef} style={{ position: 'relative', background: '#f0f4ff', color: '#0f172a', padding: '96px 64px 96px', zIndex: 10 }}>
         <div style={{ position: 'absolute', top: '30%', right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.04) 0%, transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
         <motion.div 
