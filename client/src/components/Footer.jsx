@@ -4,6 +4,19 @@ import { useNavigate } from 'react-router-dom';
 export default function Footer() {
   const navigate = useNavigate();
 
+  const handleScrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/');
+      setTimeout(() => {
+        const target = document.getElementById(id);
+        target?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+  };
+
   return (
     <footer className="footer-container">
       {/* Background radial gradient glow matching brand colors */}
@@ -11,7 +24,7 @@ export default function Footer() {
 
       <div className="footer-content">
         <div className="footer-brand">
-          <div className="footer-logo" onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="footer-logo" onClick={() => handleScrollTo('home')} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src="/App_logo.png" alt="ResuMatch Logo" style={{ height: '32px', width: 'auto' }} />
             <span>ResuMatch<span className="logo-dot">.</span></span>
           </div>
@@ -24,31 +37,31 @@ export default function Footer() {
           <div className="footer-links-col">
             <h4>Product</h4>
             <ul>
-              <li onClick={() => navigate('/')}>Home</li>
-              <li>How It Works</li>
-              <li>Features</li>
-              <li>Pricing</li>
+              <li onClick={() => handleScrollTo('home')}>Home</li>
+              <li onClick={() => handleScrollTo('how-it-works')}>How It Works</li>
+              <li onClick={() => handleScrollTo('features')}>Features</li>
+              <li onClick={() => handleScrollTo('pricing')}>Pricing</li>
             </ul>
           </div>
 
           <div className="footer-links-col">
             <h4>Resources</h4>
             <ul>
-              <li>Company</li>
-              <li>Blogs</li>
-              <li>Community</li>
-              <li className="careers-link">
+              <li onClick={() => alert('ResuMatch is built by engineering leaders to democratize career growth.')}>Company</li>
+              <li onClick={() => alert('Our career guidance blog is coming soon! Stay tuned.')}>Blogs</li>
+              <li onClick={() => alert('Join our Discord developer and applicant community coming soon!')}>Community</li>
+              <li className="careers-link" onClick={() => alert("We are currently looking for volunteer React & AI developers! Contact us at abhinashpradhan25@gmail.com")}>
                 Careers <span className="hiring-tag">We're hiring!</span>
               </li>
-              <li>About</li>
+              <li onClick={() => alert('ResuMatch helps job seekers analyze their resumes against modern ATS filters with multi-model AI auto-fallback.')}>About</li>
             </ul>
           </div>
 
           <div className="footer-links-col">
             <h4>Legal</h4>
             <ul>
-              <li>Privacy Policy</li>
-              <li>Terms of Service</li>
+              <li onClick={() => alert('Privacy Policy: We do not sell your data. Resumes are processed securely and discarded after analysis.')}>Privacy Policy</li>
+              <li onClick={() => alert('Terms of Service: ResuMatch is provided as-is for resume evaluation and mock preparation purposes.')}>Terms of Service</li>
             </ul>
           </div>
         </div>
