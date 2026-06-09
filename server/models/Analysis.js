@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const analysisSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
   resumeText: String,
   jobDescription: String,
   matchScore: Number,

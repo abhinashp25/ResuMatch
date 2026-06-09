@@ -38,11 +38,20 @@ export default function Analyzer() {
     setLoading(true);
     setError('');
     setResult(null);
-    const formData = new FormData();
-    formData.append('resume', file);
-    formData.append('jobDescription', jobDesc);
+
     try {
-      const res = await axios.post('http://localhost:5000/api/analyze', formData);
+      // Fetch Firebase ID token from current logged in user
+      const token = await user.getIdToken();
+
+      const formData = new FormData();
+      formData.append('resume', file);
+      formData.append('jobDescription', jobDesc);
+
+      const res = await axios.post('http://localhost:5000/api/analyze', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = res.data.data;
       setResult(data);
 
@@ -61,7 +70,17 @@ export default function Analyzer() {
       const analyses = saved ? JSON.parse(saved) : [];
       localStorage.setItem(storageKey, JSON.stringify([newAnalysis, ...analyses].slice(0, 50)));
     } catch (err) {
-      setError('Analysis failed. Check if server is running.');
+      if (err.response) {
+        if (err.response.status === 429) {
+          setError(err.response.data.message || '⚠️ Too many requests. Please wait a minute before trying again.');
+        } else if (err.response.data && err.response.data.message) {
+          setError(err.response.data.message);
+        } else {
+          setError('Analysis failed. The server rejected the request.');
+        }
+      } else {
+        setError('Analysis failed. Check if server is running.');
+      }
     } finally {
       setLoading(false);
     }
