@@ -151,7 +151,7 @@ export default function Dashboard() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: 10 }}>
               <div>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>🚀 Get Started Guide</h2>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}> Get Started Guide</h2>
                 <p style={{ color: '#64748b', fontSize: '0.82rem' }}>Complete these 3 simple steps to start using the app.</p>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
