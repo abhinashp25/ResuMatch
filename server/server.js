@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import connectDB from './config/db.js';
 import analyzeRoutes from './routes/analyzeRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import jobRoutes from './routes/jobRoutes.js';
+import interviewRoutes from './routes/interviewRoutes.js';
 
 // Load environment variables at the very beginning
 dotenv.config();
@@ -29,7 +32,7 @@ app.use(cors({
       return callback(new Error('Blocked by CORS policy'), false);
     }
   },
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 
@@ -37,6 +40,9 @@ app.use(express.json());
 
 // Routes
 app.use('/api/analyze', analyzeRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/interview', interviewRoutes);
 
 // Global Error Handler (Prevents stack traces leaking to client)
 app.use((err, req, res, next) => {

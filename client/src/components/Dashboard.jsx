@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
 
@@ -20,6 +21,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [greeting, setGreeting] = useState('Welcome');
   const [recentAnalyses, setRecentAnalyses] = useState([]);
+  const [docsCount, setDocsCount] = useState(0);
+  const [jobsCount, setJobsCount] = useState(0);
 
   useEffect(() => {
     const hours = new Date().getHours();
@@ -27,11 +30,31 @@ export default function Dashboard() {
     else if (hours < 18) setGreeting('Good afternoon');
     else setGreeting('Good evening');
 
+    const fetchCounts = async () => {
+      if (!user) return;
+      try {
+        const token = await user.getIdToken();
+        const [docsRes, jobsRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/documents', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:5000/api/jobs', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+        if (docsRes.data.success) setDocsCount(docsRes.data.data.length);
+        if (jobsRes.data.success) setJobsCount(jobsRes.data.data.length);
+      } catch (err) {
+        console.error('Failed to load counts on dashboard:', err);
+      }
+    };
+
     if (user?.uid) {
       const saved = localStorage.getItem(`analyses_${user.uid}`);
       if (saved) {
         try { setRecentAnalyses(JSON.parse(saved)); } catch (e) { console.error(e); }
       }
+      fetchCounts();
     }
   }, [user]);
 
@@ -43,6 +66,15 @@ export default function Dashboard() {
     ? Math.round(recentAnalyses.reduce((sum, r) => sum + r.matchScore, 0) / totalAnalyzed)
     : 0;
   const bestScore = totalAnalyzed > 0 ? Math.max(...recentAnalyses.map(r => r.matchScore)) : 0;
+
+  const onboardingTasks = [
+    { label: 'Scan Your Resume', done: totalAnalyzed > 0, tip: 'Go to the "Analyze Resume" page, upload your PDF resume and paste a job description.' },
+    { label: 'Check Saved Resumes', done: docsCount > 0, tip: 'Your scanned resumes are automatically saved inside "My Documents".' },
+    { label: 'Track Your First Job', done: jobsCount > 0, tip: 'Track matching scores and application stages in the "Job Tracker".' }
+  ];
+
+  const onboardingDone = onboardingTasks.filter(t => t.done).length;
+  const onboardingPct = Math.round((onboardingDone / onboardingTasks.length) * 100);
 
   const stats = [
     { label: 'Average Match Score', value: totalAnalyzed > 0 ? `${avgScore}%` : '—', sub: totalAnalyzed > 0 ? `${totalAnalyzed} scans run` : 'No analyses yet', color: '#7c3aed', bg: 'rgba(124,58,237,0.07)', progress: avgScore, icon: Icon.chart },
@@ -106,6 +138,69 @@ export default function Dashboard() {
             {Icon.scan}&nbsp;New Analysis
           </button>
         </div>
+
+        {/* ── Onboarding Guide for New Users ── */}
+        {onboardingPct < 100 && (
+          <div className="onboarding-card" style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(255,255,255,0.85) 100%)',
+            border: '1px solid rgba(124, 58, 237, 0.15)',
+            borderRadius: '20px',
+            padding: '24px',
+            marginBottom: '32px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: 10 }}>
+              <div>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>🚀 Get Started Guide</h2>
+                <p style={{ color: '#64748b', fontSize: '0.82rem' }}>Complete these 3 simple steps to start using the app.</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7c3aed' }}>{onboardingDone}/3 Completed</span>
+                <div style={{ width: '80px', height: '6px', background: 'rgba(0,0,0,0.05)', borderRadius: '99px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: '#7c3aed', width: `${onboardingPct}%`, transition: 'width 0.4s ease' }} />
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+              {onboardingTasks.map((task, idx) => (
+                <div key={idx} style={{
+                  background: 'rgba(255, 255, 255, 0.65)',
+                  border: '1px solid rgba(0, 0, 0, 0.04)',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  display: 'flex',
+                  gap: '12px',
+                  alignItems: 'flex-start'
+                }}>
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '6px',
+                    border: task.done ? 'none' : '1.5px solid rgba(124, 58, 237, 0.4)',
+                    background: task.done ? '#7c3aed' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                    flexShrink: 0,
+                    marginTop: '2px'
+                  }}>
+                    {task.done ? '✓' : ''}
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '0.88rem', fontWeight: 700, color: task.done ? '#94a3b8' : '#0f172a', textDecoration: task.done ? 'line-through' : 'none', marginBottom: '4px' }}>
+                      {task.label}
+                    </h3>
+                    <p style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: '1.4' }}>{task.tip}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Stats ── */}
         <div className="dash-stats" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20, marginBottom:44 }}>

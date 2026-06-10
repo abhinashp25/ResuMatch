@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
 
 // ─── Icons ───
@@ -34,31 +36,83 @@ const EditIcon = () => (
 );
 
 export default function Documents() {
+  const { user } = useAuth();
+  const [docs, setDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState('All');
   const [showModal, setShowModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newType, setNewType]   = useState('Resume');
 
-  const [docs, setDocs] = useState([
-    { id: 1, title: 'Abhinash_Resume_Tech.pdf',                type: 'Resume',       date: '2026-06-05', size: '240 KB' },
-    { id: 2, title: 'Google_Frontend_Cover_Letter.docx',       type: 'Cover Letter', date: '2026-06-07', size: '45 KB'  },
-    { id: 3, title: 'Abhinash_Resume_General.pdf',             type: 'Resume',       date: '2026-05-28', size: '215 KB' },
-    { id: 4, title: 'Meta_SWE_Cover_Letter.docx',              type: 'Cover Letter', date: '2026-06-01', size: '48 KB'  },
-  ]);
+  useEffect(() => {
+    const fetchDocs = async () => {
+      if (!user) return;
+      try {
+        setLoading(true);
+        setError('');
+        const token = await user.getIdToken();
+        const res = await axios.get('http://localhost:5000/api/documents', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setDocs(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to load documents:', err);
+        setError('Could not load documents. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocs();
+  }, [user]);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newTitle.trim()) return;
     const ext   = newType === 'Resume' ? '.pdf' : '.docx';
     const title = newTitle.trim().endsWith(ext) ? newTitle.trim() : `${newTitle.trim()}${ext}`;
-    setDocs([{ id: Date.now(), title, type: newType, date: new Date().toISOString().split('T')[0], size: '—' }, ...docs]);
+    
+    try {
+      const token = await user.getIdToken();
+      const res = await axios.post('http://localhost:5000/api/documents', {
+        title,
+        type: newType
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setDocs([res.data.data, ...docs]);
+      }
+    } catch (err) {
+      console.error('Failed to create document:', err);
+      alert('Failed to create document.');
+    }
     setNewTitle('');
     setShowModal(false);
   };
 
-  const handleDelete = (id) => setDocs(docs.filter(d => d.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      const token = await user.getIdToken();
+      const res = await axios.delete(`http://localhost:5000/api/documents/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setDocs(docs.filter(d => d._id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete document:', err);
+      alert('Failed to delete document. Make sure you are authorized.');
+    }
+  };
 
   const filtered = filter === 'All' ? docs : docs.filter(d => d.type === filter);
-  const counts   = { All: docs.length, Resume: docs.filter(d => d.type === 'Resume').length, 'Cover Letter': docs.filter(d => d.type === 'Cover Letter').length };
+  const counts   = { 
+    All: docs.length, 
+    Resume: docs.filter(d => d.type === 'Resume').length, 
+    'Cover Letter': docs.filter(d => d.type === 'Cover Letter').length 
+  };
 
   return (
     <AppLayout>
@@ -155,8 +209,17 @@ export default function Documents() {
           ))}
         </div>
 
-        {/* Empty State */}
-        {filtered.length === 0 ? (
+        {/* Loading / Error / Grid States */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.75)', borderRadius: 20 }}>
+            <p style={{ color: '#64748b', fontSize: '0.92rem' }}>Loading your secure documents vault...</p>
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.75)', borderRadius: 20 }}>
+            <p style={{ color: '#ef4444', fontSize: '0.92rem', fontWeight: 600 }}>{error}</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          /* Empty State */
           <div style={{ textAlign:'center', padding:'80px 20px', background:'rgba(255,255,255,0.75)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', borderRadius:20, border:'1px solid rgba(255,255,255,0.9)' }}>
             <div style={{ width:52, height:52, borderRadius:14, background:'rgba(124,58,237,0.07)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', color:'#7c3aed' }}>
               <DocIcon />
@@ -175,7 +238,7 @@ export default function Documents() {
               const accent   = isResume ? '#7c3aed' : '#2563eb';
               const accentBg = isResume ? 'rgba(124,58,237,0.08)' : 'rgba(37,99,235,0.08)';
               return (
-                <div key={doc.id} className="doc-card">
+                <div key={doc._id} className="doc-card">
                   {/* Top row */}
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                     <div style={{ width:42, height:42, borderRadius:12, background:accentBg, display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -204,7 +267,7 @@ export default function Documents() {
                     <button
                       className="doc-act-btn"
                       style={{ background:'rgba(239,68,68,0.06)', color:'#ef4444', border:'1px solid rgba(239,68,68,0.1)' }}
-                      onClick={() => handleDelete(doc.id)}
+                      onClick={() => handleDelete(doc._id)}
                     >
                       <TrashIcon /> Delete
                     </button>

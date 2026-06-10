@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
 
 // ─── Circular Timer SVG ───
@@ -84,21 +86,31 @@ Tip: Rehearse this answer, but never sound scripted. Genuine curiosity is more c
   },
 ];
 
-const DEFAULT_CHECKLIST = [
-  { id:1, text:'Research the company — mission, product, recent news.',             done:false },
-  { id:2, text:'Align your resume keywords with the job description.',               done:true  },
-  { id:3, text:'Prepare 3 STAR stories covering leadership, conflict, and delivery.', done:false },
-  { id:4, text:'Test camera, mic, lighting, and internet connection.',               done:false },
-  { id:5, text:'Prepare 3 thoughtful questions to ask the interviewer.',             done:false },
-  { id:6, text:'Have a copy of your resume open during the interview.',              done:false },
-];
-
 export default function Interview() {
+  const { user } = useAuth();
   const [timeLeft,      setTimeLeft]      = useState(120);
   const [timerTotal,    setTimerTotal]    = useState(120);
   const [isRunning,     setIsRunning]     = useState(false);
   const [openQ,         setOpenQ]         = useState(null);
-  const [checklist,     setChecklist]     = useState(DEFAULT_CHECKLIST);
+  const [checklist,     setChecklist]     = useState([]);
+
+  useEffect(() => {
+    const fetchChecklist = async () => {
+      if (!user) return;
+      try {
+        const token = await user.getIdToken();
+        const res = await axios.get('http://localhost:5000/api/interview/checklist', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setChecklist(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch checklist:', err);
+      }
+    };
+    fetchChecklist();
+  }, [user]);
 
   // Timer countdown
   useEffect(() => {
@@ -110,10 +122,27 @@ export default function Interview() {
 
   const setPreset = (secs) => { setTimerTotal(secs); setTimeLeft(secs); setIsRunning(false); };
   const resetTimer = () => { setTimeLeft(timerTotal); setIsRunning(false); };
-  const toggleCheck = (id) => setChecklist(prev => prev.map(i => i.id === id ? { ...i, done: !i.done } : i));
 
-  const doneCount = checklist.filter(c => c.done).length;
-  const readyPct  = Math.round((doneCount / checklist.length) * 100);
+  const toggleCheck = async (id) => {
+    const updatedList = checklist.map(i => i.id === id ? { ...i, done: !i.done } : i);
+    setChecklist(updatedList);
+
+    try {
+      const token = await user.getIdToken();
+      await axios.put('http://localhost:5000/api/interview/checklist', {
+        items: updatedList
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error('Failed to save checklist:', err);
+      // Revert state if backend update fails
+      setChecklist(checklist);
+    }
+  };
+
+  const doneCount = checklist.length > 0 ? checklist.filter(c => c.done).length : 0;
+  const readyPct  = checklist.length > 0 ? Math.round((doneCount / checklist.length) * 100) : 0;
 
   return (
     <AppLayout>

@@ -5,6 +5,9 @@ import Groq from 'groq-sdk';
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Analysis from '../models/Analysis.js';
+import Document from '../models/Document.js';
+import Job from '../models/Job.js';
+import InterviewChecklist from '../models/InterviewChecklist.js';
 import { sanitizeText } from '../middleware/validationMiddleware.js';
 
 const prompt = (resumeText, jobDescription) => `
@@ -14,7 +17,9 @@ Return ONLY a JSON object with this exact structure:
 {
   "matchScore": number between 0-100,
   "missingKeywords": ["keyword1", "keyword2"],
-  "suggestions": ["suggestion1", "suggestion2"]
+  "suggestions": ["suggestion1", "suggestion2"],
+  "jobTitle": "extracted job title or default to 'Software Engineer'",
+  "company": "extracted company name or default to 'Target Company'"
 }
 
 [START OF UNTRUSTED RESUME TEXT]
@@ -151,7 +156,10 @@ export const analyzeResume = async (req, res) => {
       ? result.suggestions.map(s => sanitizeText(String(s)))
       : [];
 
-    // Save with the authenticated userId
+    const jobTitle = result.jobTitle ? sanitizeText(String(result.jobTitle)) : 'Software Engineer';
+    const company = result.company ? sanitizeText(String(result.company)) : 'Target Company';
+
+    // 1. Save Analysis result as before
     await Analysis.create({
       userId,
       resumeText,
@@ -160,6 +168,47 @@ export const analyzeResume = async (req, res) => {
       missingKeywords: result.missingKeywords,
       suggestions: result.suggestions
     });
+
+    // 2. Real-time document entry in My Documents
+    await Document.create({
+      userId,
+      title: req.file.originalname || 'Uploaded_Resume.pdf',
+      type: 'Resume',
+      date: new Date().toISOString().split('T')[0],
+      size: req.file.size ? `${Math.round(req.file.size / 1024)} KB` : '—'
+    });
+
+    // 3. Real-time job entry in Job Tracker (Saved / bookmarked stage)
+    await Job.create({
+      userId,
+      role: jobTitle,
+      company: company,
+      status: 'bookmarked',
+      date: new Date().toISOString().split('T')[0],
+      score: result.matchScore
+    });
+
+    // 4. Update the user's InterviewPrep checklist: mark "Align your resume keywords" (ID 2) as completed
+    const DEFAULT_CHECKLIST = [
+      { id: 1, text: 'Research the company — mission, product, recent news.',             done: false },
+      { id: 2, text: 'Align your resume keywords with the job description.',               done: false },
+      { id: 3, text: 'Prepare 3 STAR stories covering leadership, conflict, and delivery.', done: false },
+      { id: 4, text: 'Test camera, mic, lighting, and internet connection.',               done: false },
+      { id: 5, text: 'Prepare 3 thoughtful questions to ask the interviewer.',             done: false },
+      { id: 6, text: 'Have a copy of your resume open during the interview.',              done: false }
+    ];
+
+    let checklist = await InterviewChecklist.findOne({ userId });
+    if (!checklist) {
+      const seeded = DEFAULT_CHECKLIST.map(item => item.id === 2 ? { ...item, done: true } : item);
+      await InterviewChecklist.create({
+        userId,
+        items: seeded
+      });
+    } else {
+      checklist.items = checklist.items.map(item => item.id === 2 ? { ...item, done: true } : item);
+      await checklist.save();
+    }
 
     // Log LLM usage (token counts) per user
     console.log(`[${new Date().toISOString()}] AI Usage Log - User: ${userId} | Model: ${modelName} | Tokens:`, tokenUsage || 'unknown');

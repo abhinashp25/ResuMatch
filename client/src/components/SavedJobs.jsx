@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
 
 // ─── Kanban column definitions ───
@@ -31,32 +33,89 @@ const companyColor = (name) => PALETTE[name.length % PALETTE.length];
 const initials     = (name) => name.substring(0, 2).toUpperCase();
 
 export default function SavedJobs() {
-  const [jobs, setJobs] = useState([
-    { id: 1, role: 'Frontend Developer', company: 'Google',  status: 'interviewing', date: '2026-06-02', score: 85 },
-    { id: 2, role: 'Software Engineer',  company: 'Meta',    status: 'applied',       date: '2026-06-04', score: 78 },
-    { id: 3, role: 'React Engineer',     company: 'Netflix', status: 'bookmarked',    date: '2026-06-06', score: 92 },
-    { id: 4, role: 'UI Engineer',        company: 'Stripe',  status: 'offer',         date: '2026-05-20', score: 89 },
-  ]);
-
+  const { user } = useAuth();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ role: '', company: '', score: '' });
 
-  const handleAdd = () => {
+  useEffect(() => {
+    const fetchJobs = async () => {
+      if (!user) return;
+      try {
+        setLoading(true);
+        setError('');
+        const token = await user.getIdToken();
+        const res = await axios.get('http://localhost:5000/api/jobs', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.success) {
+          setJobs(res.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to load jobs:', err);
+        setError('Could not load tracked jobs.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, [user]);
+
+  const handleAdd = async () => {
     if (!form.role.trim() || !form.company.trim()) return;
-    setJobs([{
-      id: Date.now(),
-      role: form.role.trim(),
-      company: form.company.trim(),
-      status: 'bookmarked',
-      date: new Date().toISOString().split('T')[0],
-      score: parseInt(form.score) || 75,
-    }, ...jobs]);
+    try {
+      const token = await user.getIdToken();
+      const res = await axios.post('http://localhost:5000/api/jobs', {
+        role: form.role.trim(),
+        company: form.company.trim(),
+        score: parseInt(form.score) || 75
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setJobs([res.data.data, ...jobs]);
+      }
+    } catch (err) {
+      console.error('Failed to add job:', err);
+      alert('Failed to add job to tracker.');
+    }
     setForm({ role: '', company: '', score: '' });
     setShowModal(false);
   };
 
-  const moveJob   = (id, newStatus) => setJobs(jobs.map(j => j.id === id ? { ...j, status: newStatus } : j));
-  const deleteJob = (id) => setJobs(jobs.filter(j => j.id !== id));
+  const moveJob = async (id, newStatus) => {
+    try {
+      const token = await user.getIdToken();
+      const res = await axios.put(`http://localhost:5000/api/jobs/${id}`, {
+        status: newStatus
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setJobs(jobs.map(j => j._id === id ? { ...j, status: newStatus } : j));
+      }
+    } catch (err) {
+      console.error('Failed to move job:', err);
+      alert('Failed to move job card.');
+    }
+  };
+
+  const deleteJob = async (id) => {
+    try {
+      const token = await user.getIdToken();
+      const res = await axios.delete(`http://localhost:5000/api/jobs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setJobs(jobs.filter(j => j._id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to delete job:', err);
+      alert('Failed to remove job card.');
+    }
+  };
 
   const totalApplied      = jobs.filter(j => j.status !== 'bookmarked').length;
   const totalInterviewing = jobs.filter(j => j.status === 'interviewing').length;
@@ -155,79 +214,89 @@ export default function SavedJobs() {
           ))}
         </div>
 
-        {/* ── Kanban Board ── */}
-        <div className="kanban-board" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16 }}>
-          {STAGES.map(stage => {
-            const stageJobs = jobs.filter(j => j.status === stage.key);
-            const nextStages = STAGES.filter(s => s.key !== stage.key);
-            return (
-              <div key={stage.key} className="kanban-col">
-                {/* Column Header */}
-                <div style={{ padding:'14px 16px', borderBottom:'1px solid rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                    <div style={{ width:7, height:7, borderRadius:'50%', background:stage.dot }} />
-                    <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#0f172a' }}>{stage.label}</span>
-                  </div>
-                  <span style={{ background:stage.bg, color:stage.color, padding:'2px 8px', borderRadius:99, fontSize:'0.7rem', fontWeight:700 }}>
-                    {stageJobs.length}
-                  </span>
-                </div>
-
-                {/* Cards */}
-                <div style={{ padding:'10px', display:'flex', flexDirection:'column', gap:8 }}>
-                  {stageJobs.length === 0 ? (
-                    <div style={{ textAlign:'center', padding:'22px 8px', color:'#cbd5e1', fontSize:'0.75rem' }}>
-                      Drop a job here
+        {/* ── Loading / Error States & Kanban Board ── */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.75)', borderRadius: 20 }}>
+            <p style={{ color: '#64748b', fontSize: '0.92rem' }}>Loading your job tracker pipeline...</p>
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.75)', borderRadius: 20 }}>
+            <p style={{ color: '#ef4444', fontSize: '0.92rem', fontWeight: 600 }}>{error}</p>
+          </div>
+        ) : (
+          <div className="kanban-board" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16 }}>
+            {STAGES.map(stage => {
+              const stageJobs = jobs.filter(j => j.status === stage.key);
+              const nextStages = STAGES.filter(s => s.key !== stage.key);
+              return (
+                <div key={stage.key} className="kanban-col">
+                  {/* Column Header */}
+                  <div style={{ padding:'14px 16px', borderBottom:'1px solid rgba(0,0,0,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+                      <div style={{ width:7, height:7, borderRadius:'50%', background:stage.dot }} />
+                      <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#0f172a' }}>{stage.label}</span>
                     </div>
-                  ) : (
-                    stageJobs.map(job => (
-                      <div key={job.id} className="job-card">
-                        {/* Company avatar + role */}
-                        <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:10 }}>
-                          <div style={{ width:34, height:34, borderRadius:9, background:companyColor(job.company), display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:'0.7rem', fontWeight:800, flexShrink:0, letterSpacing:'0.5px' }}>
-                            {initials(job.company)}
-                          </div>
-                          <div>
-                            <div style={{ fontSize:'0.83rem', fontWeight:700, color:'#0f172a', lineHeight:1.25 }}>{job.role}</div>
-                            <div style={{ fontSize:'0.72rem', color:'#64748b' }}>{job.company}</div>
-                          </div>
-                        </div>
+                    <span style={{ background:stage.bg, color:stage.color, padding:'2px 8px', borderRadius:99, fontSize:'0.7rem', fontWeight:700 }}>
+                      {stageJobs.length}
+                    </span>
+                  </div>
 
-                        {/* Score + date */}
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                          <span style={{ fontSize:'0.68rem', color:'#94a3b8' }}>
-                            {new Date(job.date).toLocaleDateString('en-IN',{ month:'short', day:'numeric' })}
-                          </span>
-                          <span style={{
-                            background: job.score >= 80 ? 'rgba(5,150,105,0.1)' : 'rgba(217,119,6,0.1)',
-                            color:      job.score >= 80 ? '#059669'               : '#d97706',
-                            padding:'2px 8px', borderRadius:99, fontSize:'0.68rem', fontWeight:700
-                          }}>
-                            {job.score}% match
-                          </span>
-                        </div>
-
-                        {/* Move to other stages */}
-                        <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginBottom:6 }}>
-                          {nextStages.map(ns => (
-                            <button key={ns.key} className="stage-move-btn" style={{ background:ns.bg, color:ns.color }} onClick={() => moveJob(job.id, ns.key)}>
-                              <ChevronIcon /> {ns.label}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Delete */}
-                        <button onClick={() => deleteJob(job.id)} style={{ background:'transparent', border:'none', color:'#cbd5e1', cursor:'pointer', padding:0, fontSize:'0.7rem', display:'flex', alignItems:'center', gap:3, fontFamily:'Inter,system-ui,sans-serif', marginTop:2 }}>
-                          <TrashIcon /> Remove
-                        </button>
+                  {/* Cards */}
+                  <div style={{ padding:'10px', display:'flex', flexDirection:'column', gap:8 }}>
+                    {stageJobs.length === 0 ? (
+                      <div style={{ textAlign:'center', padding:'22px 8px', color:'#cbd5e1', fontSize:'0.75rem' }}>
+                        Drop a job here
                       </div>
-                    ))
-                  )}
+                    ) : (
+                      stageJobs.map(job => (
+                        <div key={job._id} className="job-card">
+                          {/* Company avatar + role */}
+                          <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom:10 }}>
+                            <div style={{ width:34, height:34, borderRadius:9, background:companyColor(job.company), display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:'0.7rem', fontWeight:800, flexShrink:0, letterSpacing:'0.5px' }}>
+                              {initials(job.company)}
+                            </div>
+                            <div>
+                              <div style={{ fontSize:'0.83rem', fontWeight:700, color:'#0f172a', lineHeight:1.25 }}>{job.role}</div>
+                              <div style={{ fontSize:'0.72rem', color:'#64748b' }}>{job.company}</div>
+                            </div>
+                          </div>
+
+                          {/* Score + date */}
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                            <span style={{ fontSize:'0.68rem', color:'#94a3b8' }}>
+                              {new Date(job.date).toLocaleDateString('en-IN',{ month:'short', day:'numeric' })}
+                            </span>
+                            <span style={{
+                              background: job.score >= 80 ? 'rgba(5,150,105,0.1)' : 'rgba(217,119,6,0.1)',
+                              color:      job.score >= 80 ? '#059669'               : '#d97706',
+                              padding:'2px 8px', borderRadius:99, fontSize:'0.68rem', fontWeight:700
+                            }}>
+                              {job.score}% match
+                            </span>
+                          </div>
+
+                          {/* Move to other stages */}
+                          <div style={{ display:'flex', gap:5, flexWrap:'wrap', marginBottom:6 }}>
+                            {nextStages.map(ns => (
+                              <button key={ns.key} className="stage-move-btn" style={{ background:ns.bg, color:ns.color }} onClick={() => moveJob(job._id, ns.key)}>
+                                <ChevronIcon /> {ns.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Delete */}
+                          <button onClick={() => deleteJob(job._id)} style={{ background:'transparent', border:'none', color:'#cbd5e1', cursor:'pointer', padding:0, fontSize:'0.7rem', display:'flex', alignItems:'center', gap:3, fontFamily:'Inter,system-ui,sans-serif', marginTop:2 }}>
+                            <TrashIcon /> Remove
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
       </div>
 
