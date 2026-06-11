@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
 
@@ -47,7 +47,7 @@ export default function SavedJobs() {
         setLoading(true);
         setError('');
         const token = await user.getIdToken();
-        const res = await axios.get('http://localhost:5000/api/jobs', {
+        const res = await api.get('/api/jobs', {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.success) {
@@ -67,7 +67,7 @@ export default function SavedJobs() {
     if (!form.role.trim() || !form.company.trim()) return;
     try {
       const token = await user.getIdToken();
-      const res = await axios.post('http://localhost:5000/api/jobs', {
+      const res = await api.post('/api/jobs', {
         role: form.role.trim(),
         company: form.company.trim(),
         score: parseInt(form.score) || 75
@@ -88,7 +88,7 @@ export default function SavedJobs() {
   const moveJob = async (id, newStatus) => {
     try {
       const token = await user.getIdToken();
-      const res = await axios.put(`http://localhost:5000/api/jobs/${id}`, {
+      const res = await api.put(`/api/jobs/${id}`, {
         status: newStatus
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -105,7 +105,7 @@ export default function SavedJobs() {
   const deleteJob = async (id) => {
     try {
       const token = await user.getIdToken();
-      const res = await axios.delete(`http://localhost:5000/api/jobs/${id}`, {
+      const res = await api.delete(`/api/jobs/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/AppLayout';
 
@@ -47,7 +47,7 @@ export default function Analyzer() {
       formData.append('resume', file);
       formData.append('jobDescription', jobDesc);
 
-      const res = await axios.post('http://localhost:5000/api/analyze', formData, {
+      const res = await api.post('/api/analyze', formData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

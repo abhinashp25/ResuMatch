@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
 
@@ -99,7 +99,7 @@ export default function Interview() {
       if (!user) return;
       try {
         const token = await user.getIdToken();
-        const res = await axios.get('http://localhost:5000/api/interview/checklist', {
+        const res = await api.get('/api/interview/checklist', {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.success) {
@@ -129,7 +129,7 @@ export default function Interview() {
 
     try {
       const token = await user.getIdToken();
-      await axios.put('http://localhost:5000/api/interview/checklist', {
+      await api.put('/api/interview/checklist', {
         items: updatedList
       }, {
         headers: { Authorization: `Bearer ${token}` }

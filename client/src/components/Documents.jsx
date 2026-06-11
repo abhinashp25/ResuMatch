@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
 
@@ -52,7 +52,7 @@ export default function Documents() {
         setLoading(true);
         setError('');
         const token = await user.getIdToken();
-        const res = await axios.get('http://localhost:5000/api/documents', {
+        const res = await api.get('/api/documents', {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.success) {
@@ -75,7 +75,7 @@ export default function Documents() {
     
     try {
       const token = await user.getIdToken();
-      const res = await axios.post('http://localhost:5000/api/documents', {
+      const res = await api.post('/api/documents', {
         title,
         type: newType
       }, {
@@ -95,7 +95,7 @@ export default function Documents() {
   const handleDelete = async (id) => {
     try {
       const token = await user.getIdToken();
-      const res = await axios.delete(`http://localhost:5000/api/documents/${id}`, {
+      const res = await api.delete(`/api/documents/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {

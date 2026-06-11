@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
 
@@ -35,10 +35,10 @@ export default function Dashboard() {
       try {
         const token = await user.getIdToken();
         const [docsRes, jobsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/documents', {
+          api.get('/api/documents', {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:5000/api/jobs', {
+          api.get('/api/jobs', {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
