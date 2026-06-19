@@ -8,50 +8,56 @@ import documentRoutes from './routes/documentRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
 
-// Load environment variables at the very beginning
+// Load environment variables first, before anything else
 dotenv.config();
 
-// Connect to MongoDB database
+// Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// Set up security headers
-app.use(helmet());
+// Security headers — allow-popups is required for Firebase signInWithPopup.
+// The default "same-origin" COOP policy blocks the popup from calling
+// window.closed on the opener, which breaks Google auth entirely.
+app.use(helmet({
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+}));
 
-// Configure strict CORS policy (No wildcards in production)
+// Strict CORS — only our own front-end origin is allowed, no wildcards.
 const allowedOrigin = process.env.ALLOWED_ORIGIN || 'http://localhost:5173';
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+    // Allow server-to-server requests and tools like curl that send no origin.
     if (!origin) return callback(null, true);
+
     if (origin === allowedOrigin) {
       return callback(null, true);
-    } else {
-      console.warn(`[CORS Blocked] Request from origin: ${origin}`);
-      return callback(new Error('Blocked by CORS policy'), false);
     }
+
+    console.warn(`[CORS Blocked] Rejected request from: ${origin}`);
+    return callback(new Error('Blocked by CORS policy'), false);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  credentials: true,
 }));
 
 app.use(express.json());
 
-// Routes
-app.use('/api/analyze', analyzeRoutes);
+// API routes
+app.use('/api/analyze',   analyzeRoutes);
 app.use('/api/documents', documentRoutes);
-app.use('/api/jobs', jobRoutes);
+app.use('/api/jobs',      jobRoutes);
 app.use('/api/interview', interviewRoutes);
 
-// Global Error Handler (Prevents stack traces leaking to client)
+// Global error handler — never leak internal stack traces to the client.
 app.use((err, req, res, next) => {
-  console.error(`[${new Date().toISOString()}] Unhandled Server Error:`, err);
+  console.error(`[${new Date().toISOString()}] Unhandled error:`, err);
   res.status(500).json({
     success: false,
-    message: 'An unexpected server error occurred. Please try again later.'
+    message: 'An unexpected server error occurred. Please try again later.',
   });
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`[Server] Listening on port ${PORT}`));

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/AppLayout';
@@ -10,6 +11,8 @@ export default function Analyzer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { user } = useAuth();
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     if (!user?.uid) return;
