@@ -9,6 +9,7 @@ import Document from '../models/Document.js';
 import Job from '../models/Job.js';
 import InterviewChecklist from '../models/InterviewChecklist.js';
 import { sanitizeText } from '../middleware/validationMiddleware.js';
+import { getMatchedCompanies } from '../data/companies.js';
 
 const prompt = (resumeText, jobDescription) => `
 You are a professional resume analyzer.
@@ -210,10 +211,19 @@ export const analyzeResume = async (req, res) => {
       await checklist.save();
     }
 
+    // Match real-world companies based on the resume score and extracted job title
+    const recommendedCompanies = getMatchedCompanies(result.matchScore, jobTitle);
+
     // Log LLM usage (token counts) per user
     console.log(`[${new Date().toISOString()}] AI Usage Log - User: ${userId} | Model: ${modelName} | Tokens:`, tokenUsage || 'unknown');
 
-    res.json({ success: true, data: result });
+    res.json({
+      success: true,
+      data: {
+        ...result,
+        recommendedCompanies,
+      },
+    });
 
   } catch (error) {
     // Log server errors with timestamp, route context, and authenticated user ID, but don't leak internals to client

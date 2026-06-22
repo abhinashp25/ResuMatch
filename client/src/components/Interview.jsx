@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from './AppLayout';
@@ -88,11 +89,27 @@ Tip: Rehearse this answer, but never sound scripted. Genuine curiosity is more c
 
 export default function Interview() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // General interview state
   const [timeLeft,      setTimeLeft]      = useState(120);
   const [timerTotal,    setTimerTotal]    = useState(120);
   const [isRunning,     setIsRunning]     = useState(false);
   const [openQ,         setOpenQ]         = useState(null);
   const [checklist,     setChecklist]     = useState([]);
+
+  // Company-specific prep state
+  const [companyPrep,   setCompanyPrep]   = useState(null);
+  const [prepLoading,   setPrepLoading]   = useState(false);
+  const [prepError,     setPrepError]     = useState('');
+  const [openPrepQ,     setOpenPrepQ]     = useState(null);
+
+  // Read URL params (set by Analyzer.jsx when user clicks "Prep Interview")
+  const companyName = searchParams.get('company') || '';
+  const jobRole     = searchParams.get('role')    || 'Software Engineer';
+  const skillsParam = searchParams.get('skills')  || '';
+  const skills      = skillsParam ? skillsParam.split(',').filter(Boolean) : [];
 
   useEffect(() => {
     const fetchChecklist = async () => {
@@ -102,15 +119,42 @@ export default function Interview() {
         const res = await api.get('/api/interview/checklist', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (res.data.success) {
-          setChecklist(res.data.data);
-        }
+        if (res.data.success) setChecklist(res.data.data);
       } catch (err) {
         console.error('Failed to fetch checklist:', err);
       }
     };
     fetchChecklist();
   }, [user]);
+
+  // Auto-fetch company prep when URL contains ?company=...
+  useEffect(() => {
+    if (!companyName || !user) return;
+    fetchCompanyPrep();
+  }, [companyName, user]);
+
+  const fetchCompanyPrep = async () => {
+    if (!user || !companyName) return;
+    setPrepLoading(true);
+    setPrepError('');
+    setCompanyPrep(null);
+    setOpenPrepQ(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await api.post('/api/interview/company-prep', {
+        companyName,
+        jobRole,
+        skills,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) setCompanyPrep(res.data.data);
+    } catch (err) {
+      setPrepError(err.response?.data?.message || 'Failed to generate prep guide. Please try again.');
+    } finally {
+      setPrepLoading(false);
+    }
+  };
 
   // Timer countdown
   useEffect(() => {
@@ -189,6 +233,20 @@ export default function Interview() {
           transition: all 0.18s; margin-top: 1px;
         }
         .custom-checkbox.done { background: #7c3aed; border-color: #7c3aed; }
+        .prep-q-card {
+          border-radius: 14px; padding: 16px 18px; cursor: pointer;
+          margin-bottom: 8px; transition: background 0.18s;
+          background: rgba(255,255,255,0.6);
+          border: 1px solid rgba(255,255,255,0.85);
+        }
+        .prep-q-card:hover { background: rgba(255,255,255,0.9); }
+        .skeleton {
+          background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.03) 50%, rgba(0,0,0,0.06) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.4s infinite;
+          border-radius: 10px;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         @media(max-width:900px){ .interview-body { grid-template-columns:1fr!important; } .star-grid { grid-template-columns:repeat(2,1fr)!important; } }
         @media(max-width:500px){ .star-grid { grid-template-columns:1fr!important; } }
       `}</style>
@@ -196,15 +254,224 @@ export default function Interview() {
       <div className="interview-page">
 
         {/* ── Header ── */}
-        <div style={{ marginBottom:36 }}>
-          <p style={{ fontSize:12, fontWeight:600, color:'#7c3aed', textTransform:'uppercase', letterSpacing:'1.8px', marginBottom:8 }}>Interview Preparation</p>
-          <h1 style={{ fontSize:'clamp(1.6rem,3.5vw,2.1rem)', fontWeight:800, color:'#0f172a', letterSpacing:'-0.8px', marginBottom:6 }}>
-            Prepare for Interview
+        <div style={{ marginBottom: companyName ? 24 : 36 }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '1.8px', marginBottom: 8 }}>Interview Preparation</p>
+          <h1 style={{ fontSize: 'clamp(1.6rem,3.5vw,2.1rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.8px', marginBottom: 6 }}>
+            {companyName ? `Prepare for ${companyName}` : 'Prepare for Interview'}
           </h1>
-          <p style={{ color:'#64748b', fontSize:'0.92rem', maxWidth:560 }}>
-            Structure your answers with the STAR method, study sample questions, and practice your pacing with our built-in timer.
+          <p style={{ color: '#64748b', fontSize: '0.92rem', maxWidth: 560 }}>
+            {companyName
+              ? `AI-generated interview guide specific to ${companyName} for the ${jobRole} role.`
+              : 'Structure your answers with the STAR method, study sample questions, and practice your pacing with our built-in timer.'}
           </p>
+          {companyName && (
+            <button
+              onClick={() => navigate('/app/interview')}
+              style={{
+                marginTop: 12, background: 'transparent', border: '1px solid rgba(0,0,0,0.12)',
+                color: '#64748b', borderRadius: 99, padding: '6px 16px', fontSize: '0.8rem',
+                fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              ← Back to General Prep
+            </button>
+          )}
         </div>
+
+        {/* ── Company-Specific Prep Section ── */}
+        {companyName && (
+          <div style={{ marginBottom: 40 }}>
+            {prepLoading && (
+              <div className="glass-panel" style={{ padding: 32 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+                  <div className="skeleton" style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div className="skeleton" style={{ height: 16, width: '40%', marginBottom: 8 }} />
+                    <div className="skeleton" style={{ height: 12, width: '25%' }} />
+                  </div>
+                </div>
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="skeleton" style={{ height: 14, marginBottom: 10, width: `${75 - i * 8}%` }} />
+                ))}
+                <p style={{ textAlign: 'center', color: '#94a3b8', marginTop: 20, fontSize: '0.85rem' }}>
+                  ⏳ Generating your {companyName} interview guide with AI...
+                </p>
+              </div>
+            )}
+
+            {prepError && (
+              <div className="glass-panel" style={{ padding: 24, textAlign: 'center' }}>
+                <p style={{ color: '#ef4444', fontWeight: 600, marginBottom: 12 }}>{prepError}</p>
+                <button
+                  onClick={fetchCompanyPrep}
+                  style={{
+                    background: 'linear-gradient(135deg,#7c3aed,#6d28d9)', color: '#fff',
+                    border: 'none', borderRadius: 10, padding: '10px 24px',
+                    fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem',
+                  }}
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
+
+            {companyPrep && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                {/* Company banner */}
+                <div className="glass-panel" style={{
+                  padding: '28px 30px',
+                  background: 'linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(255,255,255,0.8) 100%)',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>
+                        {companyName} — {jobRole}
+                      </h2>
+                      <p style={{ fontSize: '0.85rem', color: '#64748b', maxWidth: 600, lineHeight: 1.6 }}>
+                        {companyPrep.overview}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Interview process steps */}
+                  <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                    Interview Process
+                  </h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                    {(companyPrep.interviewProcess || []).map((step, i) => (
+                      <div key={i} style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 10,
+                        background: 'rgba(124,58,237,0.06)', borderRadius: 12,
+                        padding: '10px 14px', flex: '1 1 240px',
+                      }}>
+                        <span style={{
+                          background: '#7c3aed', color: '#fff', borderRadius: 99,
+                          width: 22, height: 22, display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, flexShrink: 0,
+                        }}>
+                          {i + 1}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#374151', lineHeight: 1.5 }}>{step}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Key technologies */}
+                  {companyPrep.keyTechnologies?.length > 0 && (
+                    <div>
+                      <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                        Key Technologies to Study
+                      </h3>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {companyPrep.keyTechnologies.map(tech => (
+                          <span key={tech} style={{
+                            fontSize: '0.75rem', fontWeight: 700,
+                            background: 'rgba(124,58,237,0.1)', color: '#7c3aed',
+                            padding: '4px 12px', borderRadius: 99,
+                          }}>{tech}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Technical + Behavioral questions side by side */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+
+                  {/* Technical Questions */}
+                  <div className="glass-panel" style={{ padding: '24px 22px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>
+                      💻 Technical Questions
+                    </h3>
+                    {(companyPrep.technicalQuestions || []).map((item, i) => (
+                      <div
+                        key={i}
+                        className="prep-q-card"
+                        onClick={() => setOpenPrepQ(openPrepQ === `t${i}` ? null : `t${i}`)}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                          <span style={{ fontSize: '0.84rem', fontWeight: 600, color: '#0f172a', lineHeight: 1.45, flex: 1 }}>
+                            {item.q}
+                          </span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+                            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ flexShrink: 0, marginTop: 3, transition: 'transform 0.2s', transform: openPrepQ === `t${i}` ? 'rotate(180deg)' : 'none' }}>
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </div>
+                        {openPrepQ === `t${i}` && (
+                          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: 1.7 }}>
+                              💡 {item.tip}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Behavioral Questions */}
+                  <div className="glass-panel" style={{ padding: '24px 22px' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', marginBottom: 16 }}>
+                      🤝 Behavioral Questions
+                    </h3>
+                    {(companyPrep.behavioralQuestions || []).map((item, i) => (
+                      <div
+                        key={i}
+                        className="prep-q-card"
+                        onClick={() => setOpenPrepQ(openPrepQ === `b${i}` ? null : `b${i}`)}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                          <span style={{ fontSize: '0.84rem', fontWeight: 600, color: '#0f172a', lineHeight: 1.45, flex: 1 }}>
+                            {item.q}
+                          </span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+                            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ flexShrink: 0, marginTop: 3, transition: 'transform 0.2s', transform: openPrepQ === `b${i}` ? 'rotate(180deg)' : 'none' }}>
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </div>
+                        {openPrepQ === `b${i}` && (
+                          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: 1.7 }}>
+                              💡 {item.tip}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Insider tips */}
+                    {companyPrep.insiderTips?.length > 0 && (
+                      <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                        <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>
+                          🔑 Insider Tips
+                        </h4>
+                        <ul style={{ paddingLeft: 18, margin: 0 }}>
+                          {companyPrep.insiderTips.map((tip, i) => (
+                            <li key={i} style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.65, marginBottom: 6 }}>
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Divider before general content */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '8px 0' }}>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.07)' }} />
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    General Interview Prep
+                  </span>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.07)' }} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── How It Works Steps ── */}
         <div className="glass-panel" style={{ padding:'28px 30px', marginBottom:36, background:'linear-gradient(135deg, rgba(124,58,237,0.04) 0%, rgba(255,255,255,0.75) 100%)' }}>
